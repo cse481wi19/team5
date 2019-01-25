@@ -7,7 +7,7 @@ import rospy
 import sys, select, termios, tty
 
 msg = """
-Control Your Fetch!
+Control Your Kuri!
 ---------------------------
 Moving around:
         w
@@ -54,7 +54,7 @@ def vels(speed, turn):
 if __name__ == "__main__":
     settings = termios.tcgetattr(sys.stdin)
 
-    rospy.init_node('fetch_teleop_key')
+    rospy.init_node('kuri_teleop_key')
     base = robot_api.Base()
 
     x = 0
