@@ -2,7 +2,9 @@ import actionlib
 from actionlib_msgs.msg import GoalStatus
 from actionlib.action_client import CommState
 # TODO: What messages are we going to need?
-import ?????????_msgs.msg, rospy, ???????_msgs.msg
+from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
+from control_msgs.msg import FollowJointTrajectoryGoal, FollowJointTrajectoryAction
+import rospy
 
 """ 
 This is set up for Kuri, but you can take inspiration for Fetch if you like.
@@ -26,18 +28,18 @@ class Head(object):
     EYES_CLOSED_BLINK = 0.35
     # TODO: Aw shucks, ????? again?!
     # What topics should we send trajectories to for the head and eyes?
-    HEAD_NS = '??????????????????????????????????????'
-    EYES_NS = '??????????????????????????????????????'
+    HEAD_NS = '/head_controller/follow_joint_trajectory'
+    EYES_NS = '/eyelids_controller/follow_joint_trajectory'
 
     def __init__(self, js, head_ns=None, eyes_ns=None):
         self._js = js
         self._head_gh = None
         self._head_goal = None
         # TODO: What is the type of these actions? 
-        self._head_ac = actionlib.ActionClient(head_ns or self.HEAD_NS, ????????????)
+        self._head_ac = actionlib.ActionClient(head_ns or self.HEAD_NS, FollowJointTrajectoryAction)
         self._eyes_gh = None
         self._eyes_goal = None
-        self._eyes_ac = actionlib.ActionClient(eyes_ns or self.EYES_NS, ????????????)
+        self._eyes_ac = actionlib.ActionClient(eyes_ns or self.EYES_NS, FollowJointTrajectoryAction)
         return
 
     def cancel(self):
@@ -69,8 +71,14 @@ class Head(object):
         :param done_cb: Same as send_trajectory's done_cb
         """
         # TODO: Build a JointTrajectoryPoint that expresses the target configuration
+        point = JointTrajectoryPoint()
+        point.positions = [radians]
+        point.time_from_start = duration
         # TODO: Put that point into the right container type, and target the 
         # correct joint.
+        trajectory = JointTrajectory()
+        trajectory.joint_names = [self.JOINT_EYES]
+        trajectory.points = [point]
         return self.send_trajectory(trajectory, feedback_cb=feedback_cb, done_cb=done_cb)
 
     def is_done(self):
@@ -104,8 +112,14 @@ class Head(object):
         :param done_cb: Same as send_trajectory's done_cb
         """
          # TODO: Build a JointTrajectoryPoint that expresses the target configuration
+        point = JointTrajectoryPoint()
+        point.positions = [pan, tilt]
+        point.time_from_start = duration
         # TODO: Put that point into the right container type, and target the 
         # correct joint.
+        trajectory = JointTrajectory()
+        trajectory.joint_names = [self.JOINT_PAN, self.JOINT_TILT]
+        trajectory.points = [point]
         return self.send_trajectory(traj=trajectory, feedback_cb=feedback_cb, done_cb=done_cb)
 
     def send_trajectory(self, traj, feedback_cb=None, done_cb=None):
@@ -129,7 +143,7 @@ class Head(object):
                 point.time_from_start = rospy.Duration(point.time_from_start)
 
         # TODO: What should be the type of the goal?
-        goal = control_msgs.msg.???????????(trajectory=traj)
+        goal = FollowJointTrajectoryGoal(trajectory=traj)
 
         def _handle_transition(gh):
             gh_goal = gh.comm_state_machine.action_goal.goal
@@ -149,13 +163,13 @@ class Head(object):
                 return False
             self._eyes_goal = goal
             # TODO: How do we actually send the goal?
-            self._eyes_gh = self._eyes_ac.??????????(goal, _handle_transition, _handle_feedback)
+            self._eyes_gh = self._eyes_ac.send_goal(goal, _handle_transition, _handle_feedback)
         else:
             if not self._head_ac:
                 return False
             self._head_goal = goal
             # TODO: How do we actually send the goal?
-            self._head_gh = self._head_ac.???????????(goal, _handle_transition, _handle_feedback)
+            self._head_gh = self._head_ac.send_goal(goal, _handle_transition, _handle_feedback)
         return True
 
     def shutdown(self):
