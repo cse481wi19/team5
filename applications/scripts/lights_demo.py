@@ -30,6 +30,7 @@ def main():
     if command == 'off':
         rospy.logerr('Not implemented.')
     elif command == 'on':
+        lights.all_leds()
         rospy.logerr('Not implemented.')
     else:
         print_usage()

@@ -25,7 +25,11 @@ class Base(object):
         #rospy.init_node('base', anonymous = True)
 =======
         self.pub = rospy.Publisher('/mobile_base_controller/cmd_vel', Twist, queue_size=10)
+<<<<<<< HEAD
 >>>>>>> 7387faa... yes
+=======
+        # self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+>>>>>>> 1e59cf6... lights
 
     def move(self, linear_speed, angular_speed):
         """Moves the base instantaneously at given linear and angular speeds.

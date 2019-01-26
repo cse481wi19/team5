@@ -1,6 +1,6 @@
 import rospy
 # TODO: What will these need to be? ???? abound
-from ????????????.msg import ??????????
+from mobile_base_driver.msg import ChestLeds
 from ????????????.msg import ??????????
 
 class Lights(object):
@@ -63,11 +63,15 @@ class Lights(object):
     @classmethod
     def all_leds(cls, color):
         # TODO: Turn all LEDS to `color`
+        msg = []
+        for i in LED_ALL:
+            msg.append(BLUE)
+        self._light_pub.publish(msg)
     pass
 
     def __init__(self):
         # TODO: Find the legendary LED control topic, and its message type
-        self._light_pub = rospy.Publisher("??????????????", ??????, queue_size=1, latch=True)
+        self._light_pub = rospy.Publisher("/mobile_base/commands/chest_leds", ChestLeds, queue_size=1, latch=True)
         self.off()
 
     def shutdown(self):
