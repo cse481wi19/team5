@@ -1,7 +1,8 @@
 import rospy
+import robot_api
 # TODO: What will these need to be? ???? abound
 from mobile_base_driver.msg import ChestLeds
-from ????????????.msg import ??????????
+from mobile_base_driver.msg import Led
 
 class Lights(object):
     """
@@ -55,19 +56,24 @@ class Lights(object):
     LED_CENTER = range(IDX_CENTER + 1)
     LED_MID_RING = range(IDX_INNER_BOTTOM_LEFT, IDX_INNER_LEFT + 1)
     LED_OUTER_RING = range(IDX_OUTER_BOTTOM_MID_LEFT, IDX_OUTER_UPPER_MID_LEFT + 1)
-    ALL_OFF = [
-     OFF] * NUM_LEDS
+    ALL_OFF = [OFF] * NUM_LEDS
     ALL_ON = [ON] * NUM_LEDS
     ALL_HALF = [HALF] * NUM_LEDS
 
     @classmethod
-    def all_leds(cls, color):
+    # def all_leds(cls = None, color):
+    def all_leds(self,color):
         # TODO: Turn all LEDS to `color`
-        msg = []
-        for i in LED_ALL:
-            msg.append(BLUE)
-        self._light_pub.publish(msg)
-    pass
+        msg = ChestLeds()
+        for i in range(15):
+            msg.leds[i].red = color[i][0]
+            msg.leds[i].green = color[i][1]
+            msg.leds[i].blue = color[i][2]
+        pub = rospy.Publisher('/mobile_base/commands/chest_leds', ChestLeds, queue_size=10)
+        seconds = rospy.get_time()
+        while rospy.get_time() - seconds < 0.1:
+            pub.publish(msg)
+        pass
 
     def __init__(self):
         # TODO: Find the legendary LED control topic, and its message type
@@ -82,12 +88,19 @@ class Lights(object):
             :param pixels: an array of 3-ary tuples
         """
         self._last_pixels = pixels
-        # TODO: Make the magic, and publish it
-        self._light_pub.publish(msg)
+        msg = ChestLeds()
+        for i in range(15):
+            msg.leds[i].red = pixels[i][0]
+            msg.leds[i].green = pixels[i][1]
+            msg.leds[i].blue = pixels[i][2]
+        seconds = rospy.get_time()
+        while rospy.get_time() - seconds < 1:
+            self._light_pub.publish(msg)
 
     def get_pixels(self):
         return list(self._last_pixels)
 
     def off(self):
-        self.put_pixels(ChestLightClient.ALL_OFF)
+        # self.put_pixels(ChestLightClient.ALL_OFF)
+        self.put_pixels(Lights.ALL_OFF)
 # okay decompiling ./opt/gizmo-master-cbb8e0c/lib/python2.7/dist-packages/mobile_base/chest_light_client.pyc

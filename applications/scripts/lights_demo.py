@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 
 import robot_api
+from mobile_base_driver.msg import ChestLeds
+from mobile_base_driver.msg import Led
 import rospy
 
 
@@ -24,14 +26,19 @@ def main():
         print_usage()
         return
     command = argv[1]
-
     lights = robot_api.Lights()
 
     if command == 'off':
-        rospy.logerr('Not implemented.')
+        lights.off()
     elif command == 'on':
-        lights.all_leds()
-        rospy.logerr('Not implemented.')
+        lights.all_leds([lights.BLUE]*lights.NUM_LEDS)
+    elif command == 'color':
+        count = 0
+        color = [lights.RED, lights.BLUE, lights.GREEN]
+        while True:
+            num = count % 3
+            lights.put_pixels([color[num]]*lights.NUM_LEDS)
+            count += 1  
     else:
         print_usage()
 
