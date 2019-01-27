@@ -69,6 +69,12 @@ class Head(object):
         :param done_cb: Same as send_trajectory's done_cb
         """
         # TODO: Build a JointTrajectoryPoint that expresses the target configuration
+<<<<<<< HEAD
+=======
+        jtp = [JointTrajectoryPoint()]
+        jtp[0].positions = [radians]
+        jtp[0].time_from_start = duration
+>>>>>>> 655d260... lab 8
         # TODO: Put that point into the right container type, and target the 
         # correct joint.
         return self.send_trajectory(trajectory, feedback_cb=feedback_cb, done_cb=done_cb)
@@ -103,7 +109,26 @@ class Head(object):
         
         :param done_cb: Same as send_trajectory's done_cb
         """
+<<<<<<< HEAD
          # TODO: Build a JointTrajectoryPoint that expresses the target configuration
+=======
+        if pan > self.PAN_LEFT:
+            pan = self.PAN_LEFT
+        if pan < self.PAN_RIGHT:
+            pan = self.PAN_RIGHT
+        if tilt < self.TILT_UP:
+            tilt = self.TILT_UP
+        if tilt > self.TILT_DOWN:
+            tilt = self.TILT_DOWN
+
+
+        # TODO: Build a JointTrajectoryPoint that expresses the target configuration
+        jtp = [JointTrajectoryPoint(), JointTrajectoryPoint()]
+        jtp[0].positions = [pan]
+        jtp[0].time_from_start = duration
+        jtp[1].positions = [tilt]
+        jtp[1].time_from_start = duration
+>>>>>>> 655d260... lab 8
         # TODO: Put that point into the right container type, and target the 
         # correct joint.
         return self.send_trajectory(traj=trajectory, feedback_cb=feedback_cb, done_cb=done_cb)

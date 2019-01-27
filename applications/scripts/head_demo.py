@@ -45,6 +45,7 @@ def main():
             print_usage()
             return
         pan, tilt = float(argv[2]), float(argv[3])
+        hd.pan_and_tilt(pan,tilt)
         rospy.logerr('Not implemented.')
     elif command == 'eyes':
         if len(argv) < 3:
