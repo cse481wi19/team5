@@ -35,9 +35,12 @@ class JointStateReader(object):
             name: string, the name of the joint whose value we want to read.                           
                                                                                                        
         Returns: the joint value, or None if we do not have a value yet.                               
-        """                                                                                            
-        rospy.logerr('Not implemented.')                                                               
-        return 0                                                                                       
+        """          
+        self.sub = rospy.Subscriber("/joint_states", JointState, self.callback)
+        while self.isNone():
+            pass 
+        js = self.jointstate[name]                                                                                 
+        return js                                                                     
                                                                                                        
     def get_joints(self, names):                                                                       
         """Gets the latest values for a list of joint names.                    
