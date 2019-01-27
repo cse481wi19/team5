@@ -11,18 +11,24 @@ def wait_for_time():
     while rospy.Time().now().to_sec() == 0:
         pass
 
+
 def main():
     rospy.init_node('joint_state_republisher')
     wait_for_time()
-    torso_pub = rospy.Publisher('joint_state_republisher/torso_lift_joint', Float64, queue_size=10)
+    torso_pubs = []
     reader = JointStateReader()
+    for joint in reader.jointname:
+        torso_pubs.append(rospy.Publisher(
+            'joint_state_republisher/' + joint, Float64, queue_size=10))
     rospy.sleep(0.5)
 
     rate = rospy.Rate(10)
     while not rospy.is_shutdown():
-        joint_state = reader.get_joint("torso")
-        torso_pub.publish(joint_state)
+        for i in range(len(torso_pubs)):
+            joint_state = reader.get_joint(reader.jointname[i])
+            torso_pubs[i].publish(joint_state)
         rate.sleep()
+
 
 if __name__ == '__main__':
     main()
