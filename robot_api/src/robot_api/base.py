@@ -1,9 +1,5 @@
 #! /usr/bin/env python
 
-<<<<<<< HEAD
-# TODO: import ????????_msgs.msg
-=======
->>>>>>> 7387faa... yes
 from geometry_msgs.msg import Twist
 import rospy
 
@@ -19,17 +15,7 @@ class Base(object):
     """
 
     def __init__(self):
-<<<<<<< HEAD
-        # TODO: Create publisher
-        self.pub = rospy.Publisher("/mobile_base_controller/cmd_vel", Twist, queue_size = 10)
-        #rospy.init_node('base', anonymous = True)
-=======
         self.pub = rospy.Publisher('/mobile_base_controller/cmd_vel', Twist, queue_size=10)
-<<<<<<< HEAD
->>>>>>> 7387faa... yes
-=======
-        # self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
->>>>>>> 1e59cf6... lights
 
     def move(self, linear_speed, angular_speed):
         """Moves the base instantaneously at given linear and angular speeds.
@@ -43,15 +29,6 @@ class Base(object):
             angular_speed: The rotation speed, in radians/second. A positive
                 value means the robot should rotate clockwise.
         """
-<<<<<<< HEAD
-        # TODO: Create Twist msg
-        msg = Twist()
-        msg.linear.x = linear_speed
-        msg.angular.z = angular_speed
-        self.pub.publish(msg)
-        # TODO: Fill out msg
-        # TODO: Publish msg
-=======
         msg = Twist()
         msg.linear.x = linear_speed
         msg.angular.z = angular_speed 
@@ -59,16 +36,9 @@ class Base(object):
         # TODO: Fill out msg
         # TODO: Publish msg
         # rospy.logerr('Not implemented.')
->>>>>>> 7387faa... yes
 
     def stop(self):
         """Stops the mobile base from moving.
         """
-<<<<<<< HEAD
-        # TODO: Publish 0 velocity
-        self.move(0,0)
-
-=======
         self.move(0,0)
         # rospy.logerr('Not implemented.')
->>>>>>> 7387faa... yes
