@@ -40,6 +40,7 @@ class Head(object):
         self._eyes_gh = None
         self._eyes_goal = None
         self._eyes_ac = actionlib.ActionClient(eyes_ns or self.EYES_NS, FollowJointTrajectoryAction)
+        print("initialized")
         return
 
     def cancel(self):
@@ -73,7 +74,7 @@ class Head(object):
         # TODO: Build a JointTrajectoryPoint that expresses the target configuration
         point = JointTrajectoryPoint()
         point.positions = [radians]
-        point.time_from_start = duration
+        point.time_from_start.secs = duration
         # TODO: Put that point into the right container type, and target the 
         # correct joint.
         trajectory = JointTrajectory()
@@ -114,13 +115,18 @@ class Head(object):
          # TODO: Build a JointTrajectoryPoint that expresses the target configuration
         point = JointTrajectoryPoint()
         point.positions = [pan, tilt]
-        point.time_from_start = duration
+        point.time_from_start.secs = duration
         # TODO: Put that point into the right container type, and target the 
         # correct joint.
         trajectory = JointTrajectory()
         trajectory.joint_names = [self.JOINT_PAN, self.JOINT_TILT]
         trajectory.points = [point]
         return self.send_trajectory(traj=trajectory, feedback_cb=feedback_cb, done_cb=done_cb)
+
+        """
+        Each Point contains information for all joints at one time unit.
+        Trajectory contains one Point per time unit
+        """
 
     def send_trajectory(self, traj, feedback_cb=None, done_cb=None):
         """
@@ -163,13 +169,17 @@ class Head(object):
                 return False
             self._eyes_goal = goal
             # TODO: How do we actually send the goal?
+            self.wait_for_server()
             self._eyes_gh = self._eyes_ac.send_goal(goal, _handle_transition, _handle_feedback)
+            self.wait_for_done(5)
         else:
             if not self._head_ac:
                 return False
             self._head_goal = goal
             # TODO: How do we actually send the goal?
+            self.wait_for_server()
             self._head_gh = self._head_ac.send_goal(goal, _handle_transition, _handle_feedback)
+            self.wait_for_done(5)
         return True
 
     def shutdown(self):
