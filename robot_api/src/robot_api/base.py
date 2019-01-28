@@ -15,7 +15,7 @@ class Base(object):
     """
 
     def __init__(self):
-        self.pub = rospy.Publisher('/mobile_base_controller/cmd_vel', Twist, queue_size=10)
+        self.pub = rospy.Publisher('/mobile_base/commands/velocity', Twist, queue_size=10)
 
     def move(self, linear_speed, angular_speed):
         """Moves the base instantaneously at given linear and angular speeds.

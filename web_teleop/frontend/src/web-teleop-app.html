@@ -25,6 +25,10 @@
       #driving {
         display: inline-block;
       }
+      #camera img {
+        width: 45%;
+        height: auto;
+      }
     </style>
 
     <ros-websocket auto ros="{{ros}}"
@@ -33,42 +37,71 @@
     on-close="_handleClose"
     on-error="_handleError"></ros-websocket>
 
+    <!-- <ros-topic
+      id="baseTopic"
+      ros="{{ros}}"
+      topic="mobile_base/commands/velocity"
+      msg-type="geometry_msgs/Twist"
+    ></ros-topic> -->
+
     <ros-topic
       id="baseTopic"
       ros="{{ros}}"
-      topic="cmd_vel"
+      topic="mobile_base_controller/cmd_vel"
       msg-type="geometry_msgs/Twist"
     ></ros-topic>
 
-    <ros-topic auto
+    <ros-service                                                                 
+      id="headService"
+      on-response="_handleHeadSuccess"
+      on-fail="_handleHeadError"
+      name="/web_teleop/set_head"
       ros="{{ros}}"
-      topic="joint_state_republisher/torso_lift_joint"
-      msg-type="std_msgs/Float64"
-      last-message="{{torsoHeight}}"
-      on-message="_handleTorsoHeight"
-    ></ros-topic>
+      service-type="web_teleop/SetHead"
+    ></ros-service>
 
     <ros-service                                                                 
-      id="torsoService"
-      on-response="_handleTorsoSuccess"
-      on-fail="_handleTorsoError"
-      name="/web_teleop/set_torso"
+      id="eyesService"
+      on-response="_handleEyesSuccess"
+      on-fail="_handleEyesError"
+      name="/web_teleop/set_eyes"
       ros="{{ros}}"
-      service-type="web_teleop/SetTorso"
+      service-type="web_teleop/SetEyes"
     ></ros-service>
 
     <h1>Kuri teleop</h1>
     [[status]]
+
+    <div id="camera">
+        <img src="//[[hostname]]:8000/stream?topic=/upward_looking_camera/image_raw"></img>
+    </div>
+
+    
     <p>test property: [[prop1]]</p>
-    <div>
+    <!-- <div>
       Torso height: [[_round(torsoHeight.data, 0.001)]] meters
+    </div> -->
+    <div>
+    <div class="layout horizontal center">                                       
+      <paper-slider min="-0.78" max="0.78" step="0.01" editable                       
+        value="{{desiredPan}}"></paper-slider>
+        <p>Pan</p>                           
+                                           
     </div>
     <div class="layout horizontal center">                                       
-      <paper-slider min="0" max="0.4" step="0.01" editable                       
-        value="{{desiredTorsoHeight}}"></paper-slider>                           
-      <paper-button>Set torso</paper-button>                                     
+      <paper-slider min="-0.92" max="0.29" step="0.01" editable                       
+        value="{{desiredTilt}}"></paper-slider>
+        <p>Tilt</p>                                                             
     </div>
-    <paper-button on-tap="_setTorso">Set torso</paper-button>
+    <paper-button on-tap="_setHead">Set head</paper-button>
+  </div>
+    
+    <div class="layout horizontal center">  
+        <paper-slider min="-.16" max="0.41" step="0.01" editable                       
+        value="{{desiredEyes}}"></paper-slider>
+      <paper-button on-tap="_setEyes">Set eyes</paper-button>
+    </div>
+
 
     <div id="driving" class="layout vertical">
         <div class="layout horizontal">
@@ -80,9 +113,18 @@
           <div class="flex"></div>
         </div>
         <div class="layout horizontal">
-          <paper-button>Left</paper-button>
-          <paper-button>Back</paper-button>
-          <paper-button>Right</paper-button>
+          <paper-button
+            on-down="_startLeft"
+            on-up="_endBaseCommand"
+          >Left</paper-button>
+          <paper-button
+            on-down="_startBackward"
+            on-up="_endBaseCommand"
+          >Back</paper-button>
+          <paper-button
+            on-down="_startRight"
+            on-up="_endBaseCommand"
+          >Right</paper-button>
         </div>
       </div>
 
@@ -93,7 +135,13 @@
      * @customElement
      * @polymer
      */
+
     class WebTeleopApp extends Polymer.Element {
+      ready() {
+        super.ready();
+        this.hostname = window.location.hostname;
+      }
+
       static get is() { return 'web-teleop-app'; }
       static get properties() {
         return {
@@ -126,14 +174,25 @@
         return Math.round(val/precision) * precision;                            
       }
 
-      _setTorso() {
-        this.status = 'Setting torso to ' + this.desiredTorsoHeight + ' meters...';
-        this.$.torsoService.call({height: this.desiredTorsoHeight});
+      _setHead() {
+        this.status = 'Setting pan to ' + this.desiredPan + ' radians and tilt to ' + this.desiredTilt + ' radians...';
+        this.$.headService.call({pan: this.desiredPan, tilt: this.desiredTilt});
       }
-      _handleTorsoSuccess() {
-        this.status = 'Set torso to ' + this.desiredTorsoHeight + ' meters.';
+      _handleHeadSuccess() {
+        this.status = 'Set pan to ' + this.desiredPan + ' radians and tilt to ' + this.desiredTilt + ' radians.';
       }
-      _handleTorsoError(evt) {
+      _handleHeadError(evt) {
+        this.status = 'Error: ' + evt.detail;
+      }
+
+      _setEyes() {
+        this.status = 'Setting eyes to ' + this.desiredEyes + ' radians...';
+        this.$.eyesService.call({radians: this.desiredEyes});
+      }
+      _handleEyesSuccess() {
+        this.status = 'Set eyes to ' + this.desiredEyes + ' radians.';
+      }
+      _handleEyesError(evt) {
         this.status = 'Error: ' + evt.detail;
       }
 
@@ -148,7 +207,7 @@
         this.baseCommand = setInterval(function() {
           baseTopic.publish({
             linear: {
-              x: 0.1, // Set positive or negative meters/s to drive
+              x: 0.2, // Set positive or negative meters/s to drive
               y: 0,
               z: 0
             },
@@ -156,6 +215,78 @@
               x: 0,
               y: 0,
               z: 0 // Set rads/s to turn
+            }
+          });
+        }, 10); // Run this function every 10ms, or approximately 100 times per second.
+      }
+
+      _startBackward(evt) {
+        evt.preventDefault(); // Prevent right-click menu from showing up after long press on mobile
+        this.status = 'Driving backward...';
+        var baseTopic = this.$.baseTopic; // Get <ros-topic>
+        if (this.baseCommand) {
+          // The timer should not be set at this point, but clear it just in case
+          clearInterval(this.baseCommand);
+        }
+        this.baseCommand = setInterval(function() {
+          baseTopic.publish({
+            linear: {
+              x: -0.2, // Set positive or negative meters/s to drive
+              y: 0,
+              z: 0
+            },
+            angular: {
+              x: 0,
+              y: 0,
+              z: 0 // Set rads/s to turn
+            }
+          });
+        }, 10); // Run this function every 10ms, or approximately 100 times per second.
+      }
+
+      _startRight(evt) {
+        evt.preventDefault(); // Prevent right-click menu from showing up after long press on mobile
+        this.status = 'Turning right...';
+        var baseTopic = this.$.baseTopic; // Get <ros-topic>
+        if (this.baseCommand) {
+          // The timer should not be set at this point, but clear it just in case
+          clearInterval(this.baseCommand);
+        }
+        this.baseCommand = setInterval(function() {
+          baseTopic.publish({
+            linear: {
+              x: 0, // Set positive or negative meters/s to drive
+              y: 0,
+              z: 0
+            },
+            angular: {
+              x: 0,
+              y: 0,
+              z: -1.5 // Set rads/s to turn
+            }
+          });
+        }, 10); // Run this function every 10ms, or approximately 100 times per second.
+      }
+
+      _startLeft(evt) {
+        evt.preventDefault(); // Prevent right-click menu from showing up after long press on mobile
+        this.status = 'Turning left...';
+        var baseTopic = this.$.baseTopic; // Get <ros-topic>
+        if (this.baseCommand) {
+          // The timer should not be set at this point, but clear it just in case
+          clearInterval(this.baseCommand);
+        }
+        this.baseCommand = setInterval(function() {
+          baseTopic.publish({
+            linear: {
+              x: 0, // Set positive or negative meters/s to drive
+              y: 0,
+              z: 0
+            },
+            angular: {
+              x: 0,
+              y: 0,
+              z: 1.5 // Set rads/s to turn
             }
           });
         }, 10); // Run this function every 10ms, or approximately 100 times per second.
