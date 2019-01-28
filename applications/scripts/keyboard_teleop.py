@@ -10,9 +10,10 @@ msg = """
 Control Your Kuri!
 ---------------------------
 Moving around:
-        w
+   q    w    e
    a    s    d
 
+q/e: eyelids open/close
 Space: force stop
 i/k: increase/decrease only linear speed by 5 cm/s
 u/j: increase/decrease only angular speed by 0.25 rads/s
@@ -22,6 +23,8 @@ CTRL-C to quit
 """
 
 moveBindings = {'w': (1, 0), 'a': (0, 1), 'd': (0, -1), 's': (-1, 0)}
+
+eyeBindings = {'q': -0.1, 'e': 0.1}
 
 speedBindings = {
     'i': (0.05, 0),
@@ -56,6 +59,7 @@ if __name__ == "__main__":
 
     rospy.init_node('kuri_teleop_key')
     base = robot_api.Base()
+    head = robot_api.Head(None)
 
     x = 0
     th = 0
@@ -65,6 +69,7 @@ if __name__ == "__main__":
     target_turn = 0
     control_speed = 0
     control_turn = 0
+    cur_eye = 0
     try:
         print msg
         print vels(speed, turn)
@@ -83,11 +88,20 @@ if __name__ == "__main__":
                 if (status == 14):
                     print msg
                 status = (status + 1) % 15
+            elif key in eyeBindings.keys():
+                cur_eye += eyeBindings[key]
+                if cur_eye > head.EYES_CLOSED:
+                    cur_eye = head.EYES_CLOSED
+                elif cur_eye < head.EYES_HAPPY:
+                    cur_eye = head.EYES_HAPPY
+                head.eyes_to(cur_eye)
+                continue
             elif key == ' ':
                 x = 0
                 th = 0
                 control_speed = 0
                 control_turn = 0
+                head.cancel()
             else:
                 count = count + 1
                 if count > 4:

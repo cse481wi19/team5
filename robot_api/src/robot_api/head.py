@@ -71,6 +71,10 @@ class Head(object):
         
         :param done_cb: Same as send_trajectory's done_cb
         """
+        if radians > self.EYES_CLOSED:
+            radians = self.EYES_CLOSED
+        elif radians < self.EYES_HAPPY:
+            radians = self.EYES_HAPPY
         # TODO: Build a JointTrajectoryPoint that expresses the target configuration
         point = JointTrajectoryPoint()
         point.positions = [radians]
@@ -115,20 +119,14 @@ class Head(object):
          # TODO: Build a JointTrajectoryPoint that expresses the target configuration
         if pan > self.PAN_LEFT:
             pan = self.PAN_LEFT
-        if pan < self.PAN_RIGHT:
+        elif pan < self.PAN_RIGHT:
             pan = self.PAN_RIGHT
         if tilt < self.TILT_UP:
             tilt = self.TILT_UP
-        if tilt > self.TILT_DOWN:
+        elif tilt > self.TILT_DOWN:
             tilt = self.TILT_DOWN
 
-
         # TODO: Build a JointTrajectoryPoint that expresses the target configuration
-        jtp = [JointTrajectoryPoint(), JointTrajectoryPoint()]
-        jtp[0].positions = [pan]
-        jtp[0].time_from_start = duration
-        jtp[1].positions = [tilt]
-        jtp[1].time_from_start = duration
         point = JointTrajectoryPoint()
         point.positions = [pan, tilt]
         point.time_from_start.secs = duration
