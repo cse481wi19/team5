@@ -11,18 +11,18 @@ class NavPath(object):
         self._pub = pub
         self._pre_point = Point(x=0,y=0,z=0)
         self._marker = Marker(
-                type=Marker.POINTS,
+                type=Marker.LINE_STRIP,
                 id=1,
                 ns="path",
                 frame_locked = False,
                 lifetime=rospy.Duration(60),
                 action=Marker.ADD,
                 scale=Vector3(0.06, 0.06, 0),
-                pose=Pose(Point(0,0,0),Quaternion(0,0,1,0)),
-                header=Header(frame_id='base_link', stamp = rospy.Time.now()),
+                pose=Pose(Point(0,0,0),Quaternion(0,0,0,1)),
+                header=Header(frame_id='odom', stamp = rospy.Time.now()),
                 color=ColorRGBA(1.0, 0, 1.0, 0.8),
                 points=[])
-        rospy.logerr(self._pre_point)
+        # rospy.logerr(self._pre_point)
 
     def dist(self, p1, p2):
         dp = [p1.x - p2.x, p1.y - p2.y, p1.z - p2.z]
@@ -34,12 +34,9 @@ class NavPath(object):
         now_points = msg.pose.pose.position
         pre_points = self._pre_point
         if self.dist(now_points, pre_points) > 0.2:
-            rospy.logerr("hi ready to pub")
             self._pre_point = now_points
             self._marker.points.append(self._pre_point)
-            rospy.loginfo(self._marker.points)
-        # if (len(self._marker.points)>10):
-            self._marker.pose.position = self._marker.points[-1]
+            # rospy.loginfo(self._marker.points)
             self._pub.publish(self._marker)
 
 
