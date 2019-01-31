@@ -14,10 +14,11 @@ class NavPath(object):
                 type=Marker.POINTS,
                 id=1,
                 ns="path",
-                # frame_locked = False,
+                frame_locked = False,
                 lifetime=rospy.Duration(60),
                 action=Marker.ADD,
                 scale=Vector3(0.06, 0.06, 0),
+                pose=Pose(Point(0,0,0),Quaternion(0,0,1,0)),
                 header=Header(frame_id='base_link', stamp = rospy.Time.now()),
                 color=ColorRGBA(1.0, 0, 1.0, 0.8),
                 points=[])
@@ -38,6 +39,7 @@ class NavPath(object):
             self._marker.points.append(self._pre_point)
             rospy.loginfo(self._marker.points)
         # if (len(self._marker.points)>10):
+            self._marker.pose.position = self._marker.points[-1]
             self._pub.publish(self._marker)
 
 
