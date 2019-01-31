@@ -10,8 +10,17 @@ class NavPath(object):
     def __init__(self, pub):
         self._pub = pub
         self._pre_point = Point(x=0,y=0,z=0)
-        self._path = []
-        self._path.insert(0, self._pre_point)
+        self._marker = Marker(
+                type=Marker.POINTS,
+                id=1,
+                ns="path",
+                # frame_locked = False,
+                lifetime=rospy.Duration(60),
+                action=Marker.ADD,
+                scale=Vector3(0.06, 0.06, 0),
+                header=Header(frame_id='base_link', stamp = rospy.Time.now()),
+                color=ColorRGBA(1.0, 0, 1.0, 0.8),
+                points=[])
         rospy.logerr(self._pre_point)
 
     def dist(self, p1, p2):
@@ -25,22 +34,12 @@ class NavPath(object):
         pre_points = self._pre_point
         if self.dist(now_points, pre_points) > 0.2:
             rospy.logerr("hi ready to pub")
-            self._path.append(now_points)
-            # self._path[0] = now_points
-            rospy.logerr(self._path)
             self._pre_point = now_points
-            now_marker = Marker(
-                type=Marker.LINE_STRIP,
-                id=len(self._path),
-                ns="path",
-                lifetime=rospy.Duration(60),
-                action=Marker.ADD,
-                scale=Vector3(0.06, 0.06, 0.06),
-                pose=Pose(now_points, Quaternion(0, 0, 0, 1)),
-                header=Header(frame_id='base_link', stamp = rospy.Time.now()),
-                color=ColorRGBA(1.0, 0, 1.0, 0.8),
-                points=self._path)
-            self._pub.publish(now_marker)
+            self._marker.points.append(self._pre_point)
+            rospy.loginfo(self._marker.points)
+        # if (len(self._marker.points)>10):
+            self._pub.publish(self._marker)
+
 
 
 def wait_for_time():                                              
@@ -63,7 +62,7 @@ def show_text_in_rviz(marker_publisher, text):
 
 def main():
     rospy.init_node('my_node')
-    marker_publisher = rospy.Publisher('visualization_marker', Marker, queue_size=5)
+    marker_publisher = rospy.Publisher('visualization_marker', Marker, queue_size=10)
     nav_path = NavPath(marker_publisher)
     rospy.Subscriber('/mobile_base_controller/odom', Odometry, nav_path.callback)
     rospy.sleep(0.5)     
