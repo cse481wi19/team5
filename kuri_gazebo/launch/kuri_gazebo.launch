@@ -23,4 +23,10 @@
 
   <!-- bring up robot -->
   <include file="$(find kuri_gazebo)/launch/kuri_bringup.launch"/>
+<<<<<<< HEAD
 </launch>
+=======
+
+  <include file="$(find kuri_navigation)/launch/nav.launch" />
+</launch>
+>>>>>>> 2b64686dfc9406d18d9c98e61d80225be7aa1f59
