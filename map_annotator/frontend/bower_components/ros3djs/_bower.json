@@ -1,0 +1,35 @@
+{
+  "name": "ros3djs",
+  "homepage": "https://www.robotwebtools.org",
+  "description": "The standard ROS Javascript Visualization Library",
+  "license": "BSD-3-Clause",
+  "main": "./src/Ros3D.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RobotWebTools/ros3djs/releases"
+  },
+  "keywords": [
+    "ROS",
+    "ros",
+    "roslib",
+    "roslibjs",
+    "ros3djs",
+    "robot"
+  ],
+  "authors": [
+    "Robot Webtools Team <robot-web-tools@googlegroups.com> (http://robotwebtools.org)"
+  ],
+  "dependencies": {
+    "eventemitter2": "asyncly/EventEmitter2#^0.4.14",
+    "threejs": "mrdoob/three.js#r64",
+    "roslibjs": "RobotWebTools/roslibjs#0.14.0"
+  },
+  "_release": "0978eb4773",
+  "_resolution": {
+    "type": "commit",
+    "commit": "0978eb4773d3aa4891e4c73449398fe124df9c34"
+  },
+  "_source": "https://github.com/RobotWebTools/ros3djs.git",
+  "_target": "0978eb4773d3aa4891e4c73449398fe124df9c34",
+  "_originalSource": "RobotWebTools/ros3djs"
+}
