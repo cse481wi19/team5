@@ -41,7 +41,7 @@
     on-close="_handleClose"
     on-error="_handleError"></ros-websocket>
 
-    <ros-topic auto
+    <!-- <ros-topic auto
       ros="{{ros}}"
       topic="map_annotator/pose_names"
       msg-type="map_annotator/PoseNames"
@@ -55,7 +55,17 @@
       topic="map_annotator/user_actions"
       ros="{{ros}}"
       msg-type="map_annotator/UserAction"
-    ></ros-topic>
+    ></ros-topic> -->
+
+    <ros-service id="listService" 
+      name="/nav_server/list"
+      ros="{{ros}}" 
+      service-type="map_annotator/ListPose"></ros-service>
+
+      <ros-service id="saveService" 
+      name="/nav_server/save"
+      ros="{{ros}}" 
+      service-type="map_annotator/SavePose"></ros-service>
 
     <div id="main" class="layout vertical">
         <h1>Map annotator</h1>
@@ -63,7 +73,7 @@
         <div id="content" class="layout horizontal">
           <div id="controls">
             <h2>Poses</h2>
-            <paper-button on-tap="_createPose">Create Pose</paper-button>
+            <paper-button on-tap="_savePose">Create Pose</paper-button>
             <template is="dom-repeat" items="[[poseNames.names]]">
               <map-annotator-pose ros="[[ros]]" pose-name="[[item]]"></map-annotator-pose>
             </template>
@@ -102,18 +112,21 @@
         console.log(this.status);
       }
 
-      _handlePoseNames(evt) {
-        var msg = evt.detail;
-        console.log('Pose list: ', msg);
+      _handlePoseList() {
+        var poses = this.$.listService.call();
+        this.poseNames = poses;
+        console.log('Pose list: ', poses);
       }
 
-      _createPose() {
+      _savePose() {
         var pose = prompt("Please enter pose name: ");
 
         if (pose != null) {
-          console.log(pose);
+          this.$.saveService.call({ name: pose });
+          this._handlePoseList();
         }
       }
+
 
       ready() {
         super.ready();

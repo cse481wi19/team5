@@ -14,18 +14,28 @@
       }
     </style>
 
-    <ros-topic
+    <!-- <ros-topic
     auto
     id="userActions"
     topic="map_annotator/user_actions"
     ros="{{ros}}"
     msg-type="map_annotator/UserAction"
-    ></ros-topic>
+    ></ros-topic> -->
+
+    <ros-service id="deleteService" 
+    name="/nav_server/delete"
+    ros="{{ros}}" 
+    service-type="map_annotator/DeletePose"></ros-service>
+
+    <ros-service id="gotoService" 
+    name="/nav_server/goto"
+    ros="{{ros}}" 
+    service-type="map_annotator/GotoPose"></ros-service>
 
     [[poseName]]
 
     <paper-button on-tap="_handleDelete">Delete</paper-button>
-    <paper-button>Go To</paper-button>
+    <paper-button on-tap="_handleGoto">Go To</paper-button>
 
   </template>
 
@@ -39,18 +49,19 @@
         };
       }
 
-      _handleDelete(evt) {
+      _handleDelete() {
         console.log('Deleting', this.poseName);
-      }
-
-      _handleDelete(evt) {
-        console.log('Deleting', this.poseName);
-        var msg = {
+        /* var msg = {
             command: 'delete',
             name: this.poseName
-        };     
-        this.$.userActions.publish(msg);
+        };    */
+        this.$.deleteService.call({ name: this.poseName });
       }
+
+      _handleGoto() {
+        this.$.gotoService.call({name : this.poseName });
+      }
+
 
     }
     window.customElements.define(MapAnnotatorPose.is, MapAnnotatorPose);
