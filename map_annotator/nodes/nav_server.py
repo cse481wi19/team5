@@ -3,6 +3,8 @@
 import actionlib
 import rospy
 import copy
+import pickle
+import os.path
 from map_annotator.srv import *
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, PoseStamped
@@ -17,7 +19,11 @@ def wait_for_time():
 
 class NavServer(object):
     def __init__(self):
+        self._saved_data_path = "data.pickle"
         self._poses = {}
+        if os.path.exists(self._saved_data_path):
+            with open(self._saved_data_path, 'rb') as f:
+                self._poses = pickle.load(f)
         self._current_pose = Pose()
         self._move_base_ac = actionlib.SimpleActionClient('/move_base', MoveBaseAction)
         self._pose_sub = rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, callback=self.handle_update_current_pose, queue_size=10)
@@ -29,12 +35,14 @@ class NavServer(object):
             return ListPoseResponse("No poses")
         else:
             ret = "\n".join(self._poses.keys())
+            print("returned poses")
             return ListPoseResponse(ret)
 
 
     def handle_save_pose(self, request):
         # rospy.logdebug("got request!!!!!!!!!!!!!!!!!: ", request)
         self._poses[request.name] = copy.deepcopy(self._current_pose)
+        print("Saved pose")
         return SavePoseResponse(0)
 
 
@@ -64,6 +72,10 @@ class NavServer(object):
     def handle_update_current_pose(self, data):
         self._current_pose = data.pose.pose
 
+    def handle_shutdown(self):
+        with open(self._saved_data_path, 'wb') as f:
+            pickle.dump(self._poses, f, protocol=pickle.HIGHEST_PROTOCOL)
+
 
     
 
@@ -75,6 +87,8 @@ def main():
     delete_pose_service = rospy.Service('nav_server/delete', DeletePose, server.handle_delete_pose)
     list_pose_service = rospy.Service('nav_server/list', ListPose, server.handle_list_pose)
     goto_pose_service = rospy.Service('nav_server/goto', GotoPose, server.handle_goto_pose)
+
+    rospy.on_shutdown(server.handle_shutdown)
     rospy.spin()
 
 
