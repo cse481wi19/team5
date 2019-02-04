@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="map_annotator" type="nav_server.py" name="nav_server" />
+</launch>
