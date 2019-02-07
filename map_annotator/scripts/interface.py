@@ -25,6 +25,10 @@ def main():
     wait_for_time()
     
     while not rospy.is_shutdown():
+        rospy.wait_for_service('/nav_server/save')
+        rospy.wait_for_service('/nav_server/delete')
+        rospy.wait_for_service('/nav_server/list')
+        rospy.wait_for_service('/nav_server/goto')
         command = raw_input("> ")
         if command.startswith("list"):
             response = list_pose()

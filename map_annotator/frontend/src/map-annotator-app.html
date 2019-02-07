@@ -62,7 +62,12 @@
       ros="{{ros}}" 
       service-type="map_annotator/ListPose"></ros-service>
 
-      <ros-service id="saveService" 
+    <ros-service id="gotoService" 
+    name="/nav_server/goto"
+    ros="{{ros}}" 
+    service-type="map_annotator/GotoPose"></ros-service>
+
+    <ros-service id="saveService" 
       name="/nav_server/save"
       ros="{{ros}}" 
       service-type="map_annotator/SavePose"></ros-service>
@@ -74,6 +79,10 @@
           <div id="controls">
             <h2>Poses</h2>
             <paper-button on-tap="_savePose">Create Pose</paper-button>
+            <template is="dom-repeat" items="[[poseNames.names]]">
+              <map-annotator-pose ros="[[ros]]" pose-name="[[item]]"></map-annotator-pose>
+            </template>
+            <paper-button on-tap="_gotoPose">Goto Pose</paper-button>
             <template is="dom-repeat" items="[[poseNames.names]]">
               <map-annotator-pose ros="[[ros]]" pose-name="[[item]]"></map-annotator-pose>
             </template>
@@ -111,13 +120,14 @@
         this.status = 'Error connecting to the websocket server.';
         console.log(this.status);
       }
-
       _handlePoseList() {
-        var poses = this.$.listService.call();
+        var poses = this.$.listService.call({});
+        var poses= String(poses);
+        // give an empty augment {}
         this.poseNames = poses;
         console.log('Pose list: ', poses);
+        // console.log('Pose list: ', );
       }
-
       _savePose() {
         var pose = prompt("Please enter pose name: ");
 
@@ -125,6 +135,11 @@
           this.$.saveService.call({ name: pose });
           this._handlePoseList();
         }
+      }
+
+      _gotoPose() {
+        this.$.gotoService.call({name: "first"})
+        console.log("building")
       }
 
 

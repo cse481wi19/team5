@@ -9,6 +9,8 @@ from map_annotator.srv import *
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, PoseStamped
 from std_msgs.msg import Header
+from std_msgs.msg import String
+
 
 
 def wait_for_time():
@@ -28,7 +30,6 @@ class NavServer(object):
         self._move_base_ac = actionlib.SimpleActionClient('/move_base', MoveBaseAction)
         self._pose_sub = rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, callback=self.handle_update_current_pose, queue_size=10)
 
-    
     def handle_list_pose(self, request):
         # rospy.loginfo("got request: ", request)
         if len(self._poses.keys()) == 0:
@@ -36,7 +37,8 @@ class NavServer(object):
         else:
             ret = "\n".join(self._poses.keys())
             print("returned poses")
-            return ListPoseResponse(ret)
+            # return ListPoseResponse(ret)
+            return "hi debug"
 
 
     def handle_save_pose(self, request):
@@ -77,16 +79,17 @@ class NavServer(object):
             pickle.dump(self._poses, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-    
+
+# publish("/map_annotator/pose_names",msgtype,latch=True)
 
 def main():
     rospy.init_node('nav_server')
     wait_for_time()
     server = NavServer()
-    save_pose_sevice = rospy.Service('nav_server/save', SavePose, server.handle_save_pose)
-    delete_pose_service = rospy.Service('nav_server/delete', DeletePose, server.handle_delete_pose)
-    list_pose_service = rospy.Service('nav_server/list', ListPose, server.handle_list_pose)
-    goto_pose_service = rospy.Service('nav_server/goto', GotoPose, server.handle_goto_pose)
+    save_pose_sevice = rospy.Service('/nav_server/save', SavePose, server.handle_save_pose)
+    delete_pose_service = rospy.Service('/nav_server/delete', DeletePose, server.handle_delete_pose)
+    list_pose_service = rospy.Service('/nav_server/list', ListPose, server.handle_list_pose)
+    goto_pose_service = rospy.Service('/nav_server/goto', GotoPose, server.handle_goto_pose)
 
     rospy.on_shutdown(server.handle_shutdown)
     rospy.spin()

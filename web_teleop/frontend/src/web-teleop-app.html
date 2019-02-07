@@ -35,7 +35,11 @@
       }
     </style>
 
-    <ros-websocket auto ros="{{ros}}" url="{{url}}" on-connection="_handleConnection" on-close="_handleClose" on-error="_handleError"></ros-websocket>
+    <ros-websocket auto ros="{{ros}}" 
+    url="{{url}}" 
+    on-connection="_handleConnection" 
+    on-close="_handleClose" 
+    on-error="_handleError"></ros-websocket>
 
     <!-- <ros-topic
       id="baseTopic"
@@ -46,8 +50,12 @@
 
     <ros-topic id="baseTopic" ros="{{ros}}" topic="mobile_base_controller/cmd_vel" msg-type="geometry_msgs/Twist"></ros-topic>
 
-    <ros-service id="headService" on-response="_handleHeadSuccess" on-fail="_handleHeadError" name="/web_teleop/set_head"
-      ros="{{ros}}" service-type="web_teleop/SetHead"></ros-service>
+    <ros-service id="headService" 
+    on-response="_handleHeadSuccess" 
+    on-fail="_handleHeadError" 
+    name="/web_teleop/set_head"
+    ros="{{ros}}" 
+    service-type="web_teleop/SetHead"></ros-service>
 
     <ros-service id="eyesService" on-response="_handleEyesSuccess" on-fail="_handleEyesError" name="/web_teleop/set_eyes"
       ros="{{ros}}" service-type="web_teleop/SetEyes"></ros-service>
