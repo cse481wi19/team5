@@ -35,11 +35,7 @@
       }
     </style>
 
-    <ros-websocket auto ros="{{ros}}" 
-    url="{{url}}" 
-    on-connection="_handleConnection" 
-    on-close="_handleClose" 
-    on-error="_handleError"></ros-websocket>
+    <ros-websocket auto ros="{{ros}}" url="{{url}}" on-connection="_handleConnection" on-close="_handleClose" on-error="_handleError"></ros-websocket>
 
     <!-- <ros-topic
       id="baseTopic"
@@ -50,12 +46,8 @@
 
     <ros-topic id="baseTopic" ros="{{ros}}" topic="mobile_base_controller/cmd_vel" msg-type="geometry_msgs/Twist"></ros-topic>
 
-    <ros-service id="headService" 
-    on-response="_handleHeadSuccess" 
-    on-fail="_handleHeadError" 
-    name="/web_teleop/set_head"
-    ros="{{ros}}" 
-    service-type="web_teleop/SetHead"></ros-service>
+    <ros-service id="headService" on-response="_handleHeadSuccess" on-fail="_handleHeadError" name="/web_teleop/set_head"
+      ros="{{ros}}" service-type="web_teleop/SetHead"></ros-service>
 
     <ros-service id="eyesService" on-response="_handleEyesSuccess" on-fail="_handleEyesError" name="/web_teleop/set_eyes"
       ros="{{ros}}" service-type="web_teleop/SetEyes"></ros-service>
@@ -83,11 +75,17 @@
         <paper-slider min="-0.92" max="0.29" step="0.01" editable value="{{desiredTilt}}" on-value-change="_setHead"></paper-slider>
         <p>Tilt</p>
       </div>
+      <div class="layout horizontal center">
+        <paper-button on-click="_setHead">Set Head</paper-button>
+      </div>
     </div>
 
     <h3>Set Eyes</h3>
     <div class="layout horizontal center">
       <paper-slider min="-.16" max="0.41" step="0.01" editable value="{{desiredEyes}}" on-value-change="_setEyes"></paper-slider>
+    </div>
+    <div class="layout horizontal center">
+      <paper-button on-click="_setEyes">Set Eyes</paper-button>
     </div>
 
     <div>
