@@ -12,6 +12,7 @@ class FDDemo(object):
         self.wait_for_time()
         self.lights = robot_api.Lights()
         self.head = robot_api.Head(None)
+        self.body = robot_api.Base()
         self.count = 0
         vision = robot_api.Vision()
         self.head.pan_and_tilt(0.2, -0.2, duration=0.5)
@@ -35,7 +36,9 @@ class FDDemo(object):
         print "changed face: got " + str(numfaces)
         if len(facesarray.faces) is not 0 and (self.count % 2 == 0):
             delta = 0.03
+            delta_move = 0.1
             center = facesarray.faces[0].center
+            facesize = facesarray.faces[0].size
             # if center.x > 0.6 or center.x < 0.4:
             #     delta_pan = center.x - 0.5
             # elif center.x < 0.4 :
@@ -49,10 +52,14 @@ class FDDemo(object):
             # else :
             #     delta_tilt = 0      
             delta_pan = -delta if center.x > 0.5 else delta
-            delta_tilt = -delta if center.y < 0.5 else delta 
+            delta_tilt = -delta if center.y < 0.5 else delta
+            delta_dis =  -delta_move if facesize > 0.00005 else delta_move
             print("center:\n",center)
             print("delta_pan:", delta_pan)
             print("delta_tilt:", delta_tilt)
+            print("face size:", facesize)
+            print("move distance", delta_dis)
+            self.body.go_forward(delta_dis)
             self.head.head_move(delta_pan, delta_tilt, duration = 1.0)
         
 
