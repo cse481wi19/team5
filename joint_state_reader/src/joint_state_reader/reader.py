@@ -21,7 +21,7 @@ class JointStateReader(object):
     def callback(self, data):
         self.jointpositon = data.position
         self.jointstate = dict(zip(self.jointname, self.jointpositon))
-        rospy.logerr(self.jointstate)
+        # rospy.logerr(self.jointstate)
         return self.jointstate
 
     def isNone(self):
@@ -54,11 +54,8 @@ class JointStateReader(object):
         """ 
         self.sub = rospy.Subscriber("/joint_states", JointState, self.callback)
         while self.isNone():
-            pass
-        # print("self.sub:\n", self.sub)
-        # print("joint state:", self.jointstate)            
+            pass        
         js = []
         for name in names:
             js.append(self.jointstate[name])                          
         return js
-        # return [0 for x in names]

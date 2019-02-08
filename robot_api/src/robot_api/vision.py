@@ -376,7 +376,6 @@ class Vision(object):
         except (rospy.service.ServiceException, rospy.ServiceException) as e:
             logger.error(e.message)
             return
-
         return
 
     def set_params(self, module, params):

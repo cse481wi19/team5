@@ -1,7 +1,7 @@
 """
 Helpers for dealing with ROS.
 """
-import logging, genpy, rospy, timer, traceback
+import logging, genpy, rospy, traceback
 from threading import Lock
 logger = logging.getLogger(__name__)
 DEFAULT_SERVICE_WAIT_RATE = 0.1
@@ -21,7 +21,7 @@ def async_wait_for_servers(svrs, done_cb=None):
             return True
         return False
 
-    t = timer.Timer(rate=DEFAULT_SERVICE_WAIT_RATE, end_condition_callback=_runner)
+    t = rospy.timer.Timer(rate=DEFAULT_SERVICE_WAIT_RATE, end_condition_callback=_runner)
     return t
 
 

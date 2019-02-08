@@ -5,6 +5,8 @@ from actionlib.action_client import CommState
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from control_msgs.msg import FollowJointTrajectoryGoal, FollowJointTrajectoryAction
 import rospy
+import joint_state_reader      
+
 
 """ 
 This is set up for Kuri, but you can take inspiration for Fetch if you like.
@@ -31,7 +33,7 @@ class Head(object):
     HEAD_NS = '/head_controller/follow_joint_trajectory'
     EYES_NS = '/eyelids_controller/follow_joint_trajectory'
 
-    def __init__(self, js, head_ns=None, eyes_ns=None):
+    def __init__(self, js=None, head_ns=None, eyes_ns=None):
         self._js = js
         self._head_gh = None
         self._head_goal = None
@@ -107,7 +109,7 @@ class Head(object):
         and HeadClient.PAN_RIGHT
         
         :param tilt: The tilt - expected to be between HeadClient.TILT_UP
-        and HeadClient.TILT_DOWN
+        and HeadClient.TILT_DOWNs
         
         :param duration: The amount of time to take to get the head to
         the specified location.
@@ -141,6 +143,16 @@ class Head(object):
         Each Point contains information for all joints at one time unit.
         Trajectory contains one Point per time unit
         """
+
+    def head_move(self, pan_delta, tilt_delta, duration=0.5, feedback_cb=None, done_cb=None):
+        reader = joint_state_reader.JointStateReader()
+        head_joints = [self.JOINT_PAN, self.JOINT_TILT]
+        head_positions = reader.get_joints(head_joints)
+        new_pan = pan_delta + head_positions[0]
+        new_tilt = tilt_delta + head_positions[1]
+        self.pan_and_tilt(new_pan, new_tilt, duration=duration, \
+            feedback_cb=feedback_cb, done_cb=done_cb)
+        print("head_pos:",head_positions)
 
     def send_trajectory(self, traj, feedback_cb=None, done_cb=None):
         """
