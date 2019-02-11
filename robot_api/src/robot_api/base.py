@@ -20,10 +20,10 @@ class Base(object):
     """
 
     def __init__(self):
-        # self._pub = rospy.Publisher('/mobile_base_controller/cmd_vel', Twist, queue_size=10)
-        self._pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
-        # self._odom_sub = rospy.Subscriber('/mobile_base_controller/odom', Odometry, callback=self._odom_callback)
-        self._odom_sub = rospy.Subscriber('/odom', Odometry, callback=self._odom_callback)
+        self._pub = rospy.Publisher('/mobile_base_controller/cmd_vel', Twist, queue_size=10)
+        # self._pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+        self._odom_sub = rospy.Subscriber('/mobile_base_controller/odom', Odometry, callback=self._odom_callback)
+        # self._odom_sub = rospy.Subscriber('/odom', Odometry, callback=self._odom_callback)
         self._latest_odom = None
 
     def _odom_callback(self, msg):
@@ -122,6 +122,7 @@ class Base(object):
         delta = self._dist_rad(start_rads, \
                 self.quaternion_to_yaw(self._latest_odom.pose.pose.orientation))
         turn_speed = speed
+        rospy.loginfo("delta: " + str(delta))
         while delta < angular_distance:
             # TODO: you will probably need to do some math in this loop to check the CONDITION
             self.move(0, direction * turn_speed)  # positive is clockwise

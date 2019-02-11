@@ -1,11 +1,16 @@
 import actionlib
+import robot_api
 from actionlib_msgs.msg import GoalStatus
 from actionlib.action_client import CommState
-# TODO: What messages are we going to need?
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from control_msgs.msg import FollowJointTrajectoryGoal, FollowJointTrajectoryAction
+from geometry_msgs.msg import PointStamped
 import rospy
 import joint_state_reader      
+import tf
+import tf.transformations as tft
+import numpy as np
+import math
 
 
 """ 
@@ -28,20 +33,20 @@ class Head(object):
     EYES_HAPPY = -0.16
     EYES_SUPER_SAD = 0.15
     EYES_CLOSED_BLINK = 0.35
-    # TODO: Aw shucks, ????? again?!
-    # What topics should we send trajectories to for the head and eyes?
+    # topics should we send trajectories to for the head and eyes?
     HEAD_NS = '/head_controller/follow_joint_trajectory'
     EYES_NS = '/eyelids_controller/follow_joint_trajectory'
 
-    def __init__(self, js=None, head_ns=None, eyes_ns=None):
+    def __init__(self, js=None, head_ns=None, eyes_ns=None, tf_listener=None):
         self._js = js
+        self._js_reader = joint_state_reader.JointStateReader()
         self._head_gh = None
         self._head_goal = None
-        # TODO: What is the type of these actions? 
         self._head_ac = actionlib.ActionClient(head_ns or self.HEAD_NS, FollowJointTrajectoryAction)
         self._eyes_gh = None
         self._eyes_goal = None
         self._eyes_ac = actionlib.ActionClient(eyes_ns or self.EYES_NS, FollowJointTrajectoryAction)
+        self._tf_listener = tf_listener
         print("initialized")
         return
 
@@ -58,7 +63,7 @@ class Head(object):
         self._eyes_gh = None
         return
 
-    def eyes_to(self, radians, duration=1.0, feedback_cb=None, done_cb=None):
+    def eyes_to(self, radians, duration=1.0, effort=1.0, feedback_cb=None, done_cb=None):
         """
         Moves the robot's eye lids to the specified location in the duration
         specified
@@ -77,11 +82,12 @@ class Head(object):
             radians = self.EYES_CLOSED
         elif radians < self.EYES_HAPPY:
             radians = self.EYES_HAPPY
-        # TODO: Build a JointTrajectoryPoint that expresses the target configuration
+        # Build a JointTrajectoryPoint that expresses the target configuration
         point = JointTrajectoryPoint()
         point.positions = [radians]
+        point.effort = [effort]
         point.time_from_start.secs = duration
-        # TODO: Put that point into the right container type, and target the 
+        # Put that point into the right container type, and target the 
         # correct joint.
         trajectory = JointTrajectory()
         trajectory.joint_names = [self.JOINT_EYES]
@@ -100,7 +106,7 @@ class Head(object):
                 return False
         return True
 
-    def pan_and_tilt(self, pan, tilt, duration=1.0, feedback_cb=None, done_cb=None):
+    def pan_and_tilt(self, pan, tilt, duration=1.0, effort_pan=1.0, effort_tilt=1.0, feedback_cb=None, done_cb=None):
         """
         Moves the robot's head to the point specified in the duration
         specified
@@ -118,7 +124,7 @@ class Head(object):
         
         :param done_cb: Same as send_trajectory's done_cb
         """
-         # TODO: Build a JointTrajectoryPoint that expresses the target configuration
+         # Build a JointTrajectoryPoint that expresses the target configuration
         if pan > self.PAN_LEFT:
             pan = self.PAN_LEFT
         elif pan < self.PAN_RIGHT:
@@ -128,11 +134,12 @@ class Head(object):
         elif tilt > self.TILT_DOWN:
             tilt = self.TILT_DOWN
 
-        # TODO: Build a JointTrajectoryPoint that expresses the target configuration
+        # Build a JointTrajectoryPoint that expresses the target configuration
         point = JointTrajectoryPoint()
         point.positions = [pan, tilt]
+        point.effort = [effort_pan, effort_tilt]
         point.time_from_start.secs = duration
-        # TODO: Put that point into the right container type, and target the 
+        # Put that point into the right container type, and target the 
         # correct joint.
         trajectory = JointTrajectory()
         trajectory.joint_names = [self.JOINT_PAN, self.JOINT_TILT]
@@ -145,9 +152,8 @@ class Head(object):
         """
 
     def head_move(self, pan_delta, tilt_delta, duration=0.5, feedback_cb=None, done_cb=None):
-        reader = joint_state_reader.JointStateReader()
         head_joints = [self.JOINT_PAN, self.JOINT_TILT]
-        head_positions = reader.get_joints(head_joints)
+        head_positions = self._js_reader.get_joints(head_joints)
         new_pan = pan_delta + head_positions[0]
         new_tilt = tilt_delta + head_positions[1]
         self.pan_and_tilt(new_pan, new_tilt, duration=duration, \
@@ -174,7 +180,6 @@ class Head(object):
             if isinstance(point.time_from_start, (int, float)):
                 point.time_from_start = rospy.Duration(point.time_from_start)
 
-        # TODO: What should be the type of the goal?
         goal = FollowJointTrajectoryGoal(trajectory=traj)
 
         def _handle_transition(gh):
@@ -194,7 +199,7 @@ class Head(object):
             if not self._eyes_ac:
                 return False
             self._eyes_goal = goal
-            # TODO: How do we actually send the goal?
+            # send the goal
             self.wait_for_server()
             self._eyes_gh = self._eyes_ac.send_goal(goal, _handle_transition, _handle_feedback)
             self.wait_for_done(5)
@@ -202,11 +207,39 @@ class Head(object):
             if not self._head_ac:
                 return False
             self._head_goal = goal
-            # TODO: How do we actually send the goal?
+            # send the goal
             self.wait_for_server()
             self._head_gh = self._head_ac.send_goal(goal, _handle_transition, _handle_feedback)
             self.wait_for_done(5)
         return True
+
+    def look_at(self, stampedPoint):
+        point_frame = stampedPoint.header.frame_id
+        trans, rot = None, None
+        try:
+            (trans, rot) = self._tf_listener.lookupTransform('upward_looking_camera_link', point_frame, rospy.Time(0))
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
+            rospy.logerr("Exeception when looking up transform from source frame: " + str(e))
+        transform_matrix = tft.quaternion_matrix(list(rot))
+        transform_matrix[0, 3] = trans[0]
+        transform_matrix[1, 3] = trans[1]
+        transform_matrix[2, 3] = trans[2]
+        point_in_frame_id = np.array([stampedPoint.point.x, stampedPoint.point.y, stampedPoint.point.z, 1]).reshape(4, 1)
+        point_in_camera = np.dot(transform_matrix, point_in_frame_id)
+        head_joints = [self.JOINT_PAN, self.JOINT_TILT]
+        head_positions = self._js_reader.get_joints(head_joints)
+        alpha = math.atan2(point_in_camera[1], point_in_camera[0])
+        l = math.sqrt(math.pow(point_in_camera[0], 2) + math.pow(point_in_camera[1], 2))
+        beta = -1 * math.atan2(point_in_camera[2], l)
+        if head_positions[0] + alpha > self.PAN_LEFT \
+                or head_positions[0] + alpha < self.PAN_RIGHT \
+                or head_positions[1] + beta < self.TILT_UP \
+                or head_positions[1] + beta > self.TILT_DOWN:
+            return False
+        
+        self.pan_and_tilt(head_positions[0] + alpha, head_positions[1] + beta)
+        return True
+        
 
     def shutdown(self):
         self.cancel()
@@ -226,3 +259,38 @@ class Head(object):
             rate.sleep()
 
         return False
+
+class FullBodyLookAt(Head):
+    def __init__(self, tf_listener=None):
+        super(FullBodyLookAt, self).__init__(tf_listener=tf_listener)
+        self._base = robot_api.Base()
+
+    def look_at(self, stampedPoint):
+        point_frame = stampedPoint.header.frame_id
+        trans, rot = None, None
+        try:
+            (trans, rot) = self._tf_listener.lookupTransform('upward_looking_camera_link', point_frame, rospy.Time(0))
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
+            rospy.logerr("Exeception when looking up transform from source frame: " + str(e))
+        transform_matrix = tft.quaternion_matrix(list(rot))
+        transform_matrix[0, 3] = trans[0]
+        transform_matrix[1, 3] = trans[1]
+        transform_matrix[2, 3] = trans[2]
+        point_in_frame_id = np.array([stampedPoint.point.x, stampedPoint.point.y, stampedPoint.point.z, 1]).reshape(4, 1)
+        point_in_camera = np.dot(transform_matrix, point_in_frame_id)
+        head_joints = [self.JOINT_PAN, self.JOINT_TILT]
+        head_positions = self._js_reader.get_joints(head_joints)
+        alpha = math.atan2(point_in_camera[1], point_in_camera[0])
+        l = math.sqrt(math.pow(point_in_camera[0], 2) + math.pow(point_in_camera[1], 2))
+        beta = -1 * math.atan2(point_in_camera[2], l)
+        if head_positions[1] + beta < self.TILT_UP or head_positions[1] + beta > self.TILT_DOWN:
+            return False
+        elif head_positions[0] + alpha < self.PAN_LEFT and head_positions[0] + alpha > self.PAN_RIGHT:
+            self.pan_and_tilt(head_positions[0] + alpha, head_positions[1] + beta)
+            return True
+        else:
+            rospy.loginfo(head_positions[0] + alpha)
+            self._base.turn(head_positions[0] + alpha)
+            self.pan_and_tilt(self.PAN_NEUTRAL, head_positions[1] + beta)
+            return True
+    

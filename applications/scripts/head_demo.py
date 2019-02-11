@@ -2,6 +2,9 @@
 
 import robot_api
 import rospy
+from geometry_msgs.msg import PointStamped, Point
+from std_msgs.msg import Header
+import tf
 
 
 def print_usage():
@@ -27,14 +30,16 @@ def wait_for_time():
 
 def main():
     rospy.init_node('head_demo')
+    tf_listener = tf.TransformListener()
     wait_for_time()
+    rospy.sleep(1)
     argv = rospy.myargv()
     if len(argv) < 2:
         print_usage()
         return
     command = argv[1]
 
-    head = robot_api.Head(None)
+    head = robot_api.FullBodyLookAt(tf_listener=tf_listener)
 
     if command == 'look_at':
         if len(argv) < 6:
@@ -42,7 +47,13 @@ def main():
             return
         frame_id, x, y, z = argv[2], float(argv[3]), float(argv[4]), float(
             argv[5])
-        rospy.logerr('Not implemented.')
+        ps = PointStamped(
+            header = Header(
+                frame_id = frame_id
+            ),
+            point = Point(x, y, z)
+        )
+        head.look_at(ps)
     elif command == 'pan_tilt':
         if len(argv) < 4:
             print_usage()
