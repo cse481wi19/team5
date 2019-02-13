@@ -11,6 +11,7 @@ import tf
 import tf.transformations as tft
 import numpy as np
 import math
+from rospy.rostime import Duration
 
 
 """ 
@@ -75,7 +76,7 @@ class Head(object):
         the specified location.
         
         :param feedback_cb: Same as send_trajectory's feedback_cb
-        
+        float_seconds
         :param done_cb: Same as send_trajectory's done_cb
         """
         if radians > self.EYES_CLOSED:
@@ -106,7 +107,7 @@ class Head(object):
                 return False
         return True
 
-    def pan_and_tilt(self, pan, tilt, duration=1.0, effort_pan=1.0, effort_tilt=1.0, feedback_cb=None, done_cb=None):
+    def pan_and_tilt(self, pan, tilt, duration=0.1, effort_pan=1.0, effort_tilt=1.0, feedback_cb=None, done_cb=None):
         """
         Moves the robot's head to the point specified in the duration
         specified
@@ -138,7 +139,8 @@ class Head(object):
         point = JointTrajectoryPoint()
         point.positions = [pan, tilt]
         point.effort = [effort_pan, effort_tilt]
-        point.time_from_start.secs = duration
+        duration_in_nsec = duration * 1e9
+        point.time_from_start.nsecs = duration_in_nsec
         # Put that point into the right container type, and target the 
         # correct joint.
         trajectory = JointTrajectory()
@@ -151,16 +153,15 @@ class Head(object):
         Trajectory contains one Point per time unit
         """
 
-    def head_move(self, pan_delta, tilt_delta, duration=0.5, feedback_cb=None, done_cb=None):
+    def head_move(self, pan_delta, tilt_delta, duration=0.5, effort=1.0, feedback_cb=None, done_cb=None):
         head_joints = [self.JOINT_PAN, self.JOINT_TILT]
         head_positions = self._js_reader.get_joints(head_joints)
         new_pan = pan_delta + head_positions[0]
         new_tilt = tilt_delta + head_positions[1]
-        self.pan_and_tilt(new_pan, new_tilt, duration=duration, \
-            feedback_cb=feedback_cb, done_cb=done_cb)
+        self.pan_and_tilt(new_pan, new_tilt, effort_pan=effort, effort_tilt=effort, duration=duration, feedback_cb=feedback_cb, done_cb=done_cb)
         print("head_pos:",head_positions)
 
-    def send_trajectory(self, traj, feedback_cb=None, done_cb=None):
+    def send_trajectory(self, traj, effort_pan=1.0, effort_tilt=1.0, feedback_cb=None, done_cb=None):
         """
         Sends the specified trajectories to the head and eye controllers
         
@@ -209,6 +210,7 @@ class Head(object):
             self._head_goal = goal
             # send the goal
             self.wait_for_server()
+            self._head_ac.cancel_all_goals()
             self._head_gh = self._head_ac.send_goal(goal, _handle_transition, _handle_feedback)
             self.wait_for_done(5)
         return True
@@ -289,7 +291,7 @@ class FullBodyLookAt(Head):
             self.pan_and_tilt(head_positions[0] + alpha, head_positions[1] + beta)
             return True
         else:
-            rospy.loginfo(head_positions[0] + alpha)
+            # rospy.loginfo(head_positions[0] + alpha)
             self._base.turn(head_positions[0] + alpha)
             self.pan_and_tilt(self.PAN_NEUTRAL, head_positions[1] + beta)
             return True

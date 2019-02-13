@@ -1,5 +1,6 @@
 <launch>
-    <arg name="map_file" default="$(find kuri_navigation)/maps/empty_map.yaml" />
+    <!-- <arg name="map_file" default="$(find kuri_navigation)/maps/empty_map.yaml" /> -->
+    <arg name="map_file" default="/home/team5/maps/test.yaml" />
 
     <!-- Autonomous Navigation -->
     <include file="$(find kuri_navigation)/launch/move_base_kuri.launch" />

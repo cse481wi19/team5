@@ -35,32 +35,33 @@ class FDDemo(object):
         numfaces = len(facesarray.faces)
         print "changed face: got " + str(numfaces)
         if len(facesarray.faces) is not 0 and (self.count % 2 == 0):
-            delta = 0.03
+            delta = 0.1
             delta_move = 0.1
             center = facesarray.faces[0].center
             facesize = facesarray.faces[0].size
-            # if center.x > 0.6 or center.x < 0.4:
-            #     delta_pan = center.x - 0.5
-            # elif center.x < 0.4 :
-            #     delta_pan = delta
-            # else :
-            #     delta_pan = 0
-            # if center.y > 0.6 :
-            #     delta_tilt = delta
-            # elif center.y < 0.4 :
-            #     delta_tilt = -delta
-            # else :
-            #     delta_tilt = 0      
-            delta_pan = -delta if center.x > 0.5 else delta
-            delta_tilt = -delta if center.y < 0.5 else delta
-            delta_dis =  -delta_move if facesize > 0.00005 else delta_move
+            delta_pan, delta_tilt, delta_dis = 0, 0, 0
+            if center.x > 0.6:
+                delta_pan = -delta
+            elif center.x < 0.4:
+                delta_pan = delta
+            
+            if center.y > 0.6:
+                delta_tilt = delta
+            elif center.y < 0.4:
+                delta_tilt = -delta
+
+            if facesize > 0.05:
+                delta_dis = -delta_move
+            elif facesize < 0.005:
+                delta_dis = delta_move
+
             print("center:\n",center)
             print("delta_pan:", delta_pan)
             print("delta_tilt:", delta_tilt)
             print("face size:", facesize)
-            print("move distance", delta_dis)
-            self.body.go_forward(delta_dis)
-            self.head.head_move(delta_pan, delta_tilt, duration = 1.0)
+            # print("move distance", delta_dis)
+            # self.body.move(delta_dis, 0)
+            self.head.head_move(delta_pan, delta_tilt, duration=0.05)
         
 
         lightarray = [self.lights.OFF] * self.lights.NUM_LEDS
