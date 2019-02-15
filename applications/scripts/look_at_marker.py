@@ -46,7 +46,7 @@ class LookAtMarkerServer:
 
     def makeQuadrocopterMarker(self, position):
         int_marker = InteractiveMarker()
-        int_marker.header.frame_id = "base_link"
+        int_marker.header.frame_id = "map"
         int_marker.pose.position = position
         int_marker.scale = 1
 

@@ -14,13 +14,13 @@ class JointStateReader(object):
     """                                                                                                
     def __init__(self):                                                                                
         self.sub = None
-        self.jointname = ['eyelids_joint', 'head_1_joint', 'head_2_joint', 'wheel_left_joint', 'wheel_right_joint']
+        self.alljoints = ['eyelids_joint', 'head_1_joint', 'head_2_joint', 'wheel_left_joint', 'wheel_right_joint']
         self.jointpositon = [None for x in range(5)]                                                                                 
-        self.jointstate = dict(zip(self.jointname, self.jointpositon))
+        self.jointstate = dict(zip(self.alljoints, self.jointpositon))
 
     def callback(self, data):
         self.jointpositon = data.position
-        self.jointstate = dict(zip(self.jointname, self.jointpositon))
+        self.jointstate = dict(zip(self.alljoints, self.jointpositon))
         # rospy.logerr(self.jointstate)
         return self.jointstate
 

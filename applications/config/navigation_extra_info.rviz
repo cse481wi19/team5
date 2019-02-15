@@ -5,6 +5,9 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /InteractiveMarkers1
+        - /TF1
+        - /TF1/Frames1
       Splitter Ratio: 0.5
     Tree Height: 522
   - Class: rviz/Selection
@@ -57,127 +60,85 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        base_footprint:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        bellows_link:
+        body_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        bellows_link2:
+        bumper_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        elbow_flex_link:
+        caster_back_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        estop_link:
+        caster_front_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        forearm_roll_link:
+        cliff_sensor_front_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        cliff_sensor_left_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        cliff_sensor_right_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        eyelids_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        gripper_link:
+        gyro_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        head_1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        head_2_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        head_camera_depth_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        head_camera_depth_optical_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        head_camera_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        head_camera_rgb_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        head_camera_rgb_optical_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        head_pan_link:
+        hokuyo_laser_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        head_tilt_link:
+        upward_looking_camera_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        l_gripper_finger_link:
+        upward_looking_camera_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        wheel_left_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        l_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        laser_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        r_gripper_finger_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        r_wheel_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        shoulder_lift_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        shoulder_pan_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        torso_fixed_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        torso_lift_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        upperarm_roll_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        wrist_flex_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        wrist_roll_link:
+        wheel_right_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -205,7 +166,7 @@ Visualization Manager:
       Max Color: 255; 255; 255
       Max Intensity: 999999
       Min Color: 0; 0; 0
-      Min Intensity: 999999
+      Min Intensity: 0
       Name: LaserScan
       Position Transformer: XYZ
       Queue Size: 10
@@ -213,7 +174,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.01
       Style: Flat Squares
-      Topic: /base_scan
+      Topic: /scan
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -221,7 +182,7 @@ Visualization Manager:
     - Class: rviz/Camera
       Enabled: true
       Image Rendering: background and overlay
-      Image Topic: /head_camera/rgb/image_raw
+      Image Topic: /upward_looking_camera/image_raw
       Name: Camera
       Overlay Alpha: 0.5
       Queue Size: 2
@@ -232,6 +193,7 @@ Visualization Manager:
         Global Plan: true
         Global costmap: true
         Grid: true
+        InteractiveMarkers: true
         LaserScan: true
         Local Plan: true
         Local costmap: true
@@ -239,6 +201,7 @@ Visualization Manager:
         Particles: true
         PointCloud2: true
         RobotModel: true
+        TF: true
         Value: true
       Zoom Factor: 1
     - Alpha: 0.7
@@ -285,7 +248,7 @@ Visualization Manager:
       Color: 255; 25; 0
       Enabled: true
       Name: Particles
-      Topic: /particlecloud
+      Topic: /laser_particlecloud
       Unreliable: false
       Value: true
     - Alpha: 1
@@ -352,6 +315,100 @@ Visualization Manager:
       Topic: /move_base/global_costmap/costmap
       Unreliable: false
       Value: true
+    - Class: rviz/InteractiveMarkers
+      Enable Transparency: true
+      Enabled: true
+      Name: InteractiveMarkers
+      Show Axes: false
+      Show Descriptions: true
+      Show Visual Aids: false
+      Update Topic: /look_at_marker_server/update
+      Value: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        base_footprint:
+          Value: true
+        base_link:
+          Value: false
+        body_link:
+          Value: false
+        bumper_link:
+          Value: false
+        caster_back_link:
+          Value: false
+        caster_front_link:
+          Value: false
+        cliff_sensor_front_link:
+          Value: false
+        cliff_sensor_left_link:
+          Value: false
+        cliff_sensor_right_link:
+          Value: false
+        eyelids_link:
+          Value: false
+        gyro_link:
+          Value: false
+        head_1_link:
+          Value: false
+        head_2_link:
+          Value: false
+        hokuyo_laser_link:
+          Value: false
+        map:
+          Value: true
+        odom:
+          Value: true
+        upward_looking_camera_link:
+          Value: false
+        upward_looking_camera_optical_frame:
+          Value: false
+        wheel_left_link:
+          Value: false
+        wheel_right_link:
+          Value: false
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        map:
+          odom:
+            base_footprint:
+              base_link:
+                body_link:
+                  head_1_link:
+                    head_2_link:
+                      eyelids_link:
+                        {}
+                      upward_looking_camera_link:
+                        upward_looking_camera_optical_frame:
+                          {}
+                bumper_link:
+                  {}
+                caster_back_link:
+                  {}
+                caster_front_link:
+                  {}
+                cliff_sensor_front_link:
+                  {}
+                cliff_sensor_left_link:
+                  {}
+                cliff_sensor_right_link:
+                  {}
+                hokuyo_laser_link:
+                  {}
+                wheel_left_link:
+                  {}
+                wheel_right_link:
+                  {}
+              gyro_link:
+                {}
+      Update Interval: 0
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -376,22 +433,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 9.80729
+      Distance: 5.79669
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.887626
-        Y: 3.86005
-        Z: 0.0875963
+        X: 1.27959
+        Y: 0.524312
+        Z: 1.04348
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.900397
+      Pitch: 0.490397
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.50359
+      Yaw: 0.633591
     Saved:
       - Class: rviz/Orbit
         Distance: 11.773

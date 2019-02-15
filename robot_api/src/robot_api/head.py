@@ -64,7 +64,7 @@ class Head(object):
         self._eyes_gh = None
         return
 
-    def eyes_to(self, radians, duration=1.0, effort=1.0, feedback_cb=None, done_cb=None):
+    def eyes_to(self, radians, duration=0.5, effort=1.0, feedback_cb=None, done_cb=None):
         """
         Moves the robot's eye lids to the specified location in the duration
         specified
@@ -87,7 +87,8 @@ class Head(object):
         point = JointTrajectoryPoint()
         point.positions = [radians]
         point.effort = [effort]
-        point.time_from_start.secs = duration
+        duration_in_nsec = duration * 1e9
+        point.time_from_start.nsecs = duration_in_nsec
         # Put that point into the right container type, and target the 
         # correct joint.
         trajectory = JointTrajectory()
@@ -107,7 +108,7 @@ class Head(object):
                 return False
         return True
 
-    def pan_and_tilt(self, pan, tilt, duration=0.1, effort_pan=1.0, effort_tilt=1.0, feedback_cb=None, done_cb=None):
+    def pan_and_tilt(self, pan, tilt, duration=0.3, effort_pan=1.0, effort_tilt=1.0, feedback_cb=None, done_cb=None):
         """
         Moves the robot's head to the point specified in the duration
         specified
@@ -159,7 +160,6 @@ class Head(object):
         new_pan = pan_delta + head_positions[0]
         new_tilt = tilt_delta + head_positions[1]
         self.pan_and_tilt(new_pan, new_tilt, effort_pan=effort, effort_tilt=effort, duration=duration, feedback_cb=feedback_cb, done_cb=done_cb)
-        print("head_pos:",head_positions)
 
     def send_trajectory(self, traj, effort_pan=1.0, effort_tilt=1.0, feedback_cb=None, done_cb=None):
         """
@@ -215,7 +215,7 @@ class Head(object):
             self.wait_for_done(5)
         return True
 
-    def look_at(self, stampedPoint):
+    def look_at(self, stampedPoint, panOnly=False):
         point_frame = stampedPoint.header.frame_id
         trans, rot = None, None
         try:
@@ -239,7 +239,10 @@ class Head(object):
                 or head_positions[1] + beta > self.TILT_DOWN:
             return False
         
-        self.pan_and_tilt(head_positions[0] + alpha, head_positions[1] + beta)
+        if panOnly:
+            self.pan_and_tilt(head_positions[0] + alpha, self.TILT_NEUTRAL - 0.3, duration=0.05)
+        else:
+            self.pan_and_tilt(head_positions[0] + alpha, head_positions[1] + beta, duration=0.05)
         return True
         
 
@@ -282,9 +285,9 @@ class FullBodyLookAt(Head):
         point_in_camera = np.dot(transform_matrix, point_in_frame_id)
         head_joints = [self.JOINT_PAN, self.JOINT_TILT]
         head_positions = self._js_reader.get_joints(head_joints)
-        alpha = math.atan2(point_in_camera[1], point_in_camera[0])
+        alpha = -1 * math.atan2(point_in_camera[1], point_in_camera[0])
         l = math.sqrt(math.pow(point_in_camera[0], 2) + math.pow(point_in_camera[1], 2))
-        beta = -1 * math.atan2(point_in_camera[2], l)
+        beta = math.atan2(point_in_camera[2], l)
         if head_positions[1] + beta < self.TILT_UP or head_positions[1] + beta > self.TILT_DOWN:
             return False
         elif head_positions[0] + alpha < self.PAN_LEFT and head_positions[0] + alpha > self.PAN_RIGHT:

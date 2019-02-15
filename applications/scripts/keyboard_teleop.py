@@ -46,7 +46,7 @@ def getKey():
     return key
 
 
-speed = .2
+speed = 1
 turn = 1
 
 
