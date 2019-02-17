@@ -20,8 +20,11 @@ class LookAtMarkerServer:
         rospy.init_node('look_at_marker_node')
         self._server = InteractiveMarkerServer('look_at_marker_server')
         self.makeQuadrocopterMarker(Point(3, 0, 1))
+        self.makeStaticMarker(Point(0, 0, 1))
         self._tf_listener = tf.TransformListener()
         self._head = robot_api.FullBodyLookAt(tf_listener=self._tf_listener)
+        self._look_at_target = None
+        # self._head = robot_api.Head(tf_listener=self._tf_listener)
 
     def makeBox(self, msg):
         marker = Marker()
@@ -46,7 +49,7 @@ class LookAtMarkerServer:
 
     def makeQuadrocopterMarker(self, position):
         int_marker = InteractiveMarker()
-        int_marker.header.frame_id = "map"
+        int_marker.header.frame_id = "odom"
         int_marker.pose.position = position
         int_marker.scale = 1
 
@@ -69,15 +72,48 @@ class LookAtMarkerServer:
         self._server.insert(int_marker, self.handleInput)
         self._server.applyChanges()
 
+    def makeStaticMarker(self, position):
+        int_marker = InteractiveMarker()
+        int_marker.header.frame_id = "odom"
+        int_marker.pose.position = position
+        int_marker.scale = 1
+
+        int_marker.name = "movement_controller"
+        int_marker.description = "Click to make Kuri move"
+
+        box_marker = self.makeBox(int_marker)
+
+        control = InteractiveMarkerControl()
+        control.orientation.w = 1
+        control.orientation.x = 0
+        control.orientation.y = 1
+        control.orientation.z = 0
+        control.always_visible = True
+        control.interaction_mode = InteractiveMarkerControl.BUTTON
+        control.markers.append(box_marker)
+        int_marker.controls.append(copy.deepcopy(control))
+
+        self._server.insert(int_marker, self.handleInput)
+        self._server.applyChanges()
+
+
 
     def handleInput(self, input):
         if input.event_type == InteractiveMarkerFeedback.MOUSE_UP:
-            ps = PointStamped(
-                header = input.header,
-                point = input.pose.position
-            )
-            self._head.look_at(ps)
-            pass
+            if input.marker_name == "look_at_point":
+                ps = PointStamped(
+                    header = input.header,
+                    point = input.pose.position
+                )
+                self._look_at_target = ps
+                self._head.look_at(self._look_at_target)
+                pass
+            elif input.marker_name == "movement_controller":
+                if self._look_at_target == None:
+                    rospy.loginfo("position of target unknown")
+                else:
+                    self._head.move_to(self._look_at_target)
+                pass
         else:
             pass
 

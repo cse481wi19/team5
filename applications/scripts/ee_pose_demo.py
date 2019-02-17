@@ -18,16 +18,16 @@ def main():
     rospy.sleep(0.1)
     rate = rospy.Rate(1.0)
     print("rate", rate)
+    base_link='base_link'
+    camera_frame='/upward_looking_camera_link'
     while not rospy.is_shutdown():
         try:
-            (trans, rot) = listener.lookupTransform('/upward_looking_camera_link', '/base_link', rospy.Time(0))
+            (trans, rot) = listener.lookupTransform(base_link, '/odom', rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
             continue
         print("trans: ", trans)
         print("rot: ", rot)
         rate.sleep()
-
-
 
 if __name__ == '__main__':
     main()

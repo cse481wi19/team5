@@ -33,7 +33,7 @@ def axis_marker(pose_stamped):
     marker.scale.x = 0.1
 
     marker.points.append(Point(0, 0, 0))
-    marker.colors.append(ColorRGBA(1, 0, 0, 1))
+    marker.colors.append(ColorRGBA(1, 1, 1, 1))
     marker.points.append(Point(1, 0, 0))
     marker.colors.append(ColorRGBA(1, 0, 0, 1))
 

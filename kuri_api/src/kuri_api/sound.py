@@ -20,9 +20,11 @@ class SoundSource(object):
         pcm_cls = pcm_cls or alsaaudio.PCM
         try:
             self._pcm = pcm_cls(alsaaudio.PCM_PLAYBACK, card=card)
+            print "Initialized sound client succesfully"
         except alsaaudio.ALSAAudioError as ex:
-            logger.warn(('unable to open pcm device for card="{}", not playing sounds - {}').format(card, ex))
+            logger.info(('unable to open pcm device for card="{}", not playing sounds - {}').format(card, ex))
             self._pcm = None
+            print "Error: failed to initialize sound client"
 
         self._daemon = SoundDaemon(self._pcm, delay=delay)
         self._player = None

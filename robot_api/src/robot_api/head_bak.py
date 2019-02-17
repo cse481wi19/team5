@@ -221,48 +221,36 @@ class Head(object):
     def look_at(self, stampedPoint, panOnly=False):
         point_frame = stampedPoint.header.frame_id
         trans, rot = None, None
-        A_frame = 'head_1_link'
-        B_frame = point_frame
         try:
-            (trans, rot) = self._tf_listener.lookupTransform(A_frame, B_frame, rospy.Time(0))
+            # T(A to B) = lookupTransform(A_frame, B_frame, time) -> (position, quaternion)
+            # We want transform points in other frame to points in camera frame
+            (trans, rot) = self._tf_listener.lookupTransform('upward_looking_camera_link', point_frame, rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
             rospy.logerr("Exeception when looking up transform from source frame: " + str(e))
+        transform_matrix = tft.quaternion_matrix(list(rot))
+        transform_matrix[0, 3] = trans[0]
+        transform_matrix[1, 3] = trans[1]
+        transform_matrix[2, 3] = trans[2]
+        point_in_frame_id = np.array([stampedPoint.point.x, stampedPoint.point.y, stampedPoint.point.z, 1]).reshape(4, 1)
+        point_in_camera = np.dot(transform_matrix, point_in_frame_id)
 
-        T_A_B = tft.quaternion_matrix(list(rot))
-        T_A_B[0, 3] = trans[0]
-        T_A_B[1, 3] = trans[1]
-        T_A_B[2, 3] = trans[2]
-        
-        P_in_B = np.array([stampedPoint.point.x, stampedPoint.point.y, stampedPoint.point.z, 1]).reshape(4, 1)
-        P_in_A = np.dot(T_A_B, P_in_B)
-        x,y,z = P_in_A[0], P_in_A[1], P_in_A[2]
+        head_positions = self.get_head_pos()
 
-        alpha = math.atan2(y, x)
-        l = math.sqrt(x**2 + y**2)
-        beta = - math.atan2(z, l)
-        delta = [alpha,beta]
-
-        cur_pan, cur_tilt = self.get_head_pos()
-
-        print("------------------*******************************--------------------")
-        print("------------------*******************************--------------------")
-        # print("P_in_A:\n", P_in_A)
-        # print("delta",delta)
-        target_pan = cur_pan + alpha
-        target_tilt = beta
-        target = [target_pan,target_tilt]
-        print("target:",target)
-
-
-        if target_tilt < self.TILT_UP or target_tilt > self.TILT_DOWN or target_pan > self.PAN_LEFT or target_pan < self.PAN_RIGHT:
-            print("Case 1: ")            
-            print("------------------Out of range----------------------")
+        alpha = math.atan2(point_in_camera[1], point_in_camera[0])
+        l = math.sqrt(math.pow(point_in_camera[0], 2) + math.pow(point_in_camera[1], 2))
+        beta = -1 * math.atan2(point_in_camera[2], l)
+        if head_positions[0] + alpha > self.PAN_LEFT \
+                or head_positions[0] + alpha < self.PAN_RIGHT \
+                or head_positions[1] + beta < self.TILT_UP \
+                or head_positions[1] + beta > self.TILT_DOWN:
+            print("Out of TILT range")
             return False
+        
+        if panOnly:
+            self.pan_and_tilt(head_positions[0] + alpha, self.TILT_NEUTRAL - 0.3, duration=1.0)
         else:
-            print("Case 2: Turning head only")
-            self.pan_and_tilt(target_pan, target_tilt)
-            # print("WE CAN DO IT !!")
-            return True
+            self.pan_and_tilt(head_positions[0] + alpha, head_positions[1] + beta, duration=1.0)
+        return True
         
 
     def shutdown(self):
@@ -292,35 +280,31 @@ class FullBodyLookAt(Head):
     def look_at(self, stampedPoint):
         point_frame = stampedPoint.header.frame_id
         trans, rot = None, None
-        A_frame = 'head_1_link'
-        B_frame = point_frame
         try:
-            (trans, rot) = self._tf_listener.lookupTransform(A_frame, B_frame, rospy.Time(0))
+            (trans, rot) = self._tf_listener.lookupTransform('upward_looking_camera_link', point_frame, rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
             rospy.logerr("Exeception when looking up transform from source frame: " + str(e))
 
-        T_A_B = tft.quaternion_matrix(list(rot))
-        T_A_B[0, 3] = trans[0]
-        T_A_B[1, 3] = trans[1]
-        T_A_B[2, 3] = trans[2]
+        transform_matrix = tft.quaternion_matrix(list(rot))
+        transform_matrix[0, 3] = trans[0]
+        transform_matrix[1, 3] = trans[1]
+        transform_matrix[2, 3] = trans[2]
         
-        P_in_B = np.array([stampedPoint.point.x, stampedPoint.point.y, stampedPoint.point.z, 1]).reshape(4, 1)
-        P_in_A = np.dot(T_A_B, P_in_B)
-        x,y,z = P_in_A[0], P_in_A[1], P_in_A[2]
-
-        alpha = math.atan2(y, x)
-        l = math.sqrt(x**2 + y**2)
-        beta = - math.atan2(z, l)
-        delta = [alpha,beta]
+        point_in_frame_id = np.array([stampedPoint.point.x, stampedPoint.point.y, stampedPoint.point.z, 1]).reshape(4, 1)
+        point_in_camera = np.dot(transform_matrix, point_in_frame_id)
 
         cur_pan, cur_tilt = self.get_head_pos()
 
+        alpha = math.atan2(point_in_camera[1], point_in_camera[0])
+        l = math.sqrt(math.pow(point_in_camera[0], 2) + math.pow(point_in_camera[1], 2))
+        beta = - math.atan2(point_in_camera[2], l)
+        delta = [alpha,beta]
         print("------------------*******************************--------------------")
         print("------------------*******************************--------------------")
-        # print("P_in_A:\n", P_in_A)
-        # print("delta",delta)
+        print("point in camera:\n", point_in_camera)
+        print("delta",delta)
         target_pan = cur_pan + alpha
-        target_tilt = beta
+        target_tilt = cur_tilt + beta
         target = [target_pan,target_tilt]
         print("target:",target)
 
@@ -340,38 +324,6 @@ class FullBodyLookAt(Head):
             self.pan_and_tilt(self.PAN_NEUTRAL, target_tilt)
             # print("Turn my body-------******------Then get it!!!!")
             return True
-
-    def move_to(self, stampedPoint):
-        point_frame = stampedPoint.header.frame_id
-        trans, rot = None, None
-        A_frame = 'head_1_link'
-        B_frame = point_frame
-        try:
-            (trans, rot) = self._tf_listener.lookupTransform(A_frame, B_frame, rospy.Time(0))
-        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
-            rospy.logerr("Exeception when looking up transform from source frame: " + str(e))
-
-        # assume face is already looking in direction we need to go
-        cur_pan, cur_tilt = self.get_head_pos()
-        if (cur_pan != self.PAN_NEUTRAL):
-            self._base.turn(cur_pan)
-            self.pan_and_tilt(self.PAN_NEUTRAL, cur_tilt)
-
-        T_A_B = tft.quaternion_matrix(list(rot))
-        T_A_B[0, 3] = trans[0]
-        T_A_B[1, 3] = trans[1]
-        T_A_B[2, 3] = trans[2]
-        
-        P_in_B = np.array([stampedPoint.point.x, stampedPoint.point.y, stampedPoint.point.z, 1]).reshape(4, 1)
-        P_in_A = np.dot(T_A_B, P_in_B)
-        x,y,z = P_in_A[0], P_in_A[1], P_in_A[2]
-
-        dist = math.sqrt(x**2 + y**2)
-        print("dist to point is", dist)
-
-        if (dist > 2):
-            self._base.go_forward(dist - 2, speed=0.3)
-
 
     # PAN_LEFT = 0.78
     # PAN_NEUTRAL = 0

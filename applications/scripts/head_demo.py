@@ -68,6 +68,7 @@ def main():
         head.eyes_to(angle)
     else:
         print_usage()
+    head.wait_for_done(5)
 
 
 if __name__ == '__main__':

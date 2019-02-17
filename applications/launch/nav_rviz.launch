@@ -1,5 +1,5 @@
 <launch>
-  <arg name="map_file_name" default="/home/team5/maps/kuri_playground.yaml" />
+  <arg name="map_file_name" default="/home/team5/maps/playground.yaml" />
   <include file="$(find kuri_navigation)/launch/nav.launch">
     <arg name="map_file" value="$(arg map_file_name)" />
   </include>
