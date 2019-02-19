@@ -10,6 +10,7 @@ from visualization_msgs.msg import Marker
 from std_msgs.msg import Header, ColorRGBA, Bool
 
 ThreeD = False
+SOCIAL_CUES = True
 class FDDemo(object):
 
     def __init__(self):
@@ -18,7 +19,7 @@ class FDDemo(object):
         self.lights = robot_api.Lights()
         self.head = robot_api.Head(tf_listener=tf.TransformListener())
         self.body = robot_api.Base()
-        self.social_cues = robot_api.Social_Cues()
+        self.social_cues = robot_api.Social_Cues(move_head=False, use_sounds=False)
         self.publisher = rospy.Publisher('face_pose_marker', Marker, queue_size=10)
         self.command_sub = rospy.Subscriber('move_command', Bool, queue_size=1, callback=self.command_callback)
         self.face_already_seen = False
@@ -29,8 +30,9 @@ class FDDemo(object):
         rospy.sleep(0.5)
         vision.wait_until_ready(timeout=10)
         vision.face_change.connect(self.face_callback)
+        if SOCIAL_CUES:
+            self.social_cues.express_neutral()
         rospy.spin()
-
 
     def wait_for_time(self):
         """Wait for simulated time to begin.
@@ -41,10 +43,12 @@ class FDDemo(object):
     def face_callback(self, facesarray):
         numfaces = len(facesarray.faces)
         self.num_faces = numfaces
-        # print("# face:", numfaces)
+        print "# faces: " + str(numfaces)
         if numfaces is not 0:
             if not self.face_already_seen:
-                self.social_cues.express_happy()
+                if SOCIAL_CUES:
+                    self.social_cues.express_happy()
+                    self.social_cues.express_neutral()
                 self.face_already_seen = True
             if ThreeD:
                 pointStamped = self.generatePointStamped(facesarray.faces[0])
@@ -58,9 +62,9 @@ class FDDemo(object):
                     header=Header(frame_id=pointStamped.header.frame_id),
                     color=ColorRGBA(1.0, 1.0, 1.0, 0.8),)
                 self.publisher.publish(marker)
-                self.head.look_at(pointStamped)
+                self.head.look_at(pointStamped, duration=0.1)
             else:
-                delta_head, delta_rotate, delta_move = 0.1, 0.2, 0.3
+                delta_head, delta_rotate, delta_move = 0.05, 0.2, 0.3
 
                 center = facesarray.faces[0].center
                 facesize = facesarray.faces[0].size
@@ -88,9 +92,9 @@ class FDDemo(object):
                 elif center.x < 0.4 and delta_dis is not 0:
                     delta_turn = delta_rotate
 
-                # print("center:\n",center)
-                print("delta_pan:", delta_pan)
-                print("delta_tilt:", delta_tilt)
+                print "center: " + str(center)
+                print "delta_pan: " + str(delta_pan)
+                print "delta_tilt:" + str(delta_tilt)
                 # print("face size:", facesize)
                 # print("move distance", delta_dis)
                 if self.move_command:
@@ -99,20 +103,25 @@ class FDDemo(object):
                     else:
                         self.body.move(delta_dis, delta_turn)
                 self.head.head_move(delta_pan, delta_tilt, duration=0.05)
-        else:
-            if self.face_already_seen:
-                self.social_cues.express_sad()
-                self.face_already_seen = False
+                print "finished head move"
+        # else:
+        #     if self.face_already_seen:
+        #         if SOCIAL_CUES:
+        #             self.social_cues.express_sad()
+        #             self.social_cues.express_neutral()
+        #         self.face_already_seen = False
         
         # self.show_lights(numfaces)
 
     def command_callback(self, msg):
         if msg.data:
             if self.num_faces == 0:
-                self.social_cues.shake_head()
+                if SOCIAL_CUES:
+                    self.social_cues.shake_head()
             else:
-                self.social_cues.nod_head()
-                self.social_cues.express_neutral()
+                if SOCIAL_CUES:
+                    self.social_cues.nod_head()
+                    self.social_cues.express_neutral()
                 self.move_command = True
     
     def show_lights(self, num):

@@ -83,11 +83,12 @@ class Head(object):
             radians = self.EYES_CLOSED
         elif radians < self.EYES_HAPPY:
             radians = self.EYES_HAPPY
-        # Build a JointTrajectoryPoint that expresses the target configuration
+        # Build a JointTrajectoryPoint expresses the target configuration
         point = JointTrajectoryPoint()
         point.positions = [radians]
         point.effort = [effort]
-        duration_in_nsec = duration * 1e9
+        duration_in_nsec = duration * 1e9            
+
         point.time_from_start.nsecs = duration_in_nsec
         # Put that point into the right container type, and target the 
         # correct joint.
@@ -213,12 +214,12 @@ class Head(object):
             self._head_goal = goal
             # send the goal
             self.wait_for_server()
-            self._head_ac.cancel_all_goals()
+            # self._head_ac.cancel_all_goals()
             self._head_gh = self._head_ac.send_goal(goal, _handle_transition, _handle_feedback)
             self.wait_for_done(5)
         return True
 
-    def look_at(self, stampedPoint, panOnly=False):
+    def look_at(self, stampedPoint, panOnly=False, duration=0.1):
         point_frame = stampedPoint.header.frame_id
         trans, rot = None, None
         A_frame = 'head_1_link'
@@ -260,7 +261,7 @@ class Head(object):
             return False
         else:
             print("Case 2: Turning head only")
-            self.pan_and_tilt(target_pan, target_tilt)
+            self.pan_and_tilt(target_pan, target_tilt, duration=duration)
             # print("WE CAN DO IT !!")
             return True
         

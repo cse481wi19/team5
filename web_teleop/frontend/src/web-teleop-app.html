@@ -44,8 +44,11 @@
       msg-type="geometry_msgs/Twist"
     ></ros-topic> -->
 
-    <ros-topic id="baseTopic" ros="{{ros}}" topic="mobile_base_controller/cmd_vel" msg-type="geometry_msgs/Twist"></ros-topic>
+    <!-- sim robot -->
+    <!-- <ros-topic id="baseTopic" ros="{{ros}}" topic="mobile_base_controller/cmd_vel" msg-type="geometry_msgs/Twist"></ros-topic> -->
 
+    <!-- real robot -->
+    <ros-topic id="baseTopic" ros="{{ros}}" topic="cmd_vel" msg-type="geometry_msgs/Twist"></ros-topic>
     <ros-service id="headService" on-response="_handleHeadSuccess" on-fail="_handleHeadError" name="/web_teleop/set_head"
       ros="{{ros}}" service-type="web_teleop/SetHead"></ros-service>
 

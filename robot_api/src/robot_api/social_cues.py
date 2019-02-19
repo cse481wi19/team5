@@ -3,15 +3,15 @@ import robot_api
 import kuri_api
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
-USE_SOUNDS = False
-
 class Social_Cues(object):
     
-    def __init__(self, feedback_cb=None, done_cb=None):
+    def __init__(self, feedback_cb=None, done_cb=None, use_sounds=True, move_head=True):
         self.head = robot_api.Head()
         self.lights = robot_api.Lights()
-        if USE_SOUNDS:
+        self.use_sounds = use_sounds
+        if self.use_sounds:
             self.sound_src = kuri_api.SoundSource('Ava')
+        self.move_head = move_head
         self._feedback_cb = feedback_cb
         self._done_cb = done_cb
 
@@ -86,26 +86,30 @@ class Social_Cues(object):
         cur_head_pos = self.head.get_head_pos()
         cur_pan = cur_head_pos[0]
         self.lights.all_leds([pink_RGB]*self.lights.NUM_LEDS)
-        if USE_SOUNDS:
+        if self.use_sounds:
             self.sound_src.play('./files/bastion_happy_loud.wav')
         self.head.eyes_to(-0.1)
-        self.head.pan_and_tilt(cur_pan, -0.4)
-        rospy.sleep(1)
+        if self.move_head:
+            self.head.pan_and_tilt(cur_pan, -0.4)
+            rospy.sleep(1)
         self.lights.off()
 
     def express_sad(self):
         cur_head_pos = self.head.get_head_pos()
         cur_pan = cur_head_pos[0]
         self.lights.all_leds([self.lights.BLUE]*self.lights.NUM_LEDS)
-        if USE_SOUNDS:
+        if self.use_sounds:
             self.sound_src.play('./files/bastion_sad_loud.wav')
         self.head.eyes_to(0.15)
-        self.head.pan_and_tilt(cur_pan, 0)
-        rospy.sleep(1)
+        if self.move_head:
+            self.head.pan_and_tilt(cur_pan, 0)
+            rospy.sleep(1)
         self.lights.off()
 
     def express_neutral(self):
         cur_head_pos = self.head.get_head_pos()
         cur_pan = cur_head_pos[0]
         self.head.eyes_to(0)
-        self.head.pan_and_tilt(cur_pan, -0.3)
+        self.lights.off()
+        if self.move_head:
+            self.head.pan_and_tilt(cur_pan, -0.3)
