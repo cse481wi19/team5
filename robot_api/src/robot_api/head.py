@@ -295,6 +295,7 @@ class FullBodyLookAt(Head):
         trans, rot = None, None
         A_frame = 'head_1_link'
         B_frame = point_frame
+        print(B_frame)
         try:
             (trans, rot) = self._tf_listener.lookupTransform(A_frame, B_frame, rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
