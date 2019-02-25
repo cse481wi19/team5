@@ -9,7 +9,7 @@ import numpy as np
 import rospy
 import tf.transformations as tft
 
-REAL_ROBOT = True
+REAL_ROBOT = False
 
 class Base(object):
     """Base controls the mobile base portion of the Fetch robot.

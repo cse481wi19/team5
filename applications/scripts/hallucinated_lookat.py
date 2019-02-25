@@ -38,7 +38,7 @@ def main():
     while len(reader.markers) == 0: 
         rospy.sleep(0.1)
 
-    head = robot_api.Head(tf_listener=reader._tf_listener)
+    head = robot_api.FullBodyLookAt(tf_listener=reader._tf_listener)
     sp = PointStamped()
     for marker in reader.markers:
         # TODO: get the pose to move to

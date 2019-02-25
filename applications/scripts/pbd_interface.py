@@ -4,7 +4,7 @@ import rospy
 import tf
 import robot_api
 import pickle
-from geometry_msgs.msg import Point, PointStamped
+from geometry_msgs.msg import Point, PointStamped, PoseStamped
 from ar_track_alvar_msgs.msg import AlvarMarkers
 from nav_msgs.msg import Odometry
 
@@ -21,6 +21,8 @@ def print_usage():
     print("  savepose: Save the robot's current pose. AR tag must be visible.")
     print("  stop: Stop recording the current program and save to disk.")
     print("  load <filename>: Load the given program from disk.")
+    print("  discard: Discard current program. Must use 'start' to begin program again.")
+    print("  quit: Quit the interface.")
     print("  help: Show this list of commands.")
 
 def get_name_from_command(command):
@@ -33,13 +35,29 @@ class RobotPose():
         self.current_pose = None
     
     def pose_callback(self, msg):
-        self.current_pose = msg.pose.pose
+        self.current_pose = PoseStamped(header=msg.header, pose=msg.pose.pose)
 
 class ProgramByDemonstration():
-    def __init__(self, name, ar_tag):
+    def __init__(self, name, ar_tag, tf_listener=None):
         self.name = name
         self.poses = []
         self.ar_tag = ar_tag
+        self._head = robot_api.FullBodyLookAt(tf_listener)
+
+    def run(self):
+        for pose in self.poses:
+            ps = PointStamped(header=pose.header, point=pose.pose.position)
+            self._head.look_at(ps, turnHead=False)
+            self._head.move_to(ps)
+            
+
+    def to_string(self):
+        ret = "POSES\n"
+        for pose in self.poses:
+            ret += str(pose) + "\n"
+        ret += "\n" + str(self.ar_tag)
+        return ret
+
 
 class ArTagReader(object):
     def __init__(self, tf_listener):
@@ -56,7 +74,8 @@ def main():
     odom_sub = rospy.Subscriber("/odom", Odometry, callback=robotPose.pose_callback, queue_size=10)
     wait_for_time()
 
-    reader = ArTagReader(tf.TransformListener())
+    tf_listener = tf.TransformListener()
+    reader = ArTagReader(tf_listener)
     rospy.sleep(0.5)
     ar_pose_sub = rospy.Subscriber("/ar_pose_marker", AlvarMarkers, callback=reader.callback, queue_size=10) # Subscribe to AR tag poses, use reader.callback
 
@@ -73,7 +92,7 @@ def main():
             else:
                 name = get_name_from_command(command)
                 ps = PointStamped(header=reader.markers[0].header, point=reader.markers[0].pose.pose.position)
-                current_program = ProgramByDemonstration(name, ps)
+                current_program = ProgramByDemonstration(name, ps, tf_listener)
                 print("started new program with name '{}'".format(name))
         elif command.startswith("savepose"):
             # save current pose relative to ar tag
@@ -102,12 +121,24 @@ def main():
                 with open(filename, 'r') as f:
                     current_program = pickle.load(f)
                 print("loaded program from file '{}'".format(filename))
-        elif command.startswith("exit"):
+        elif command.startswith("run"):
+            # run the current program from the beginning
+            if current_program is None:
+                print("no program in progress")
+            else:
+                current_program.run()
+                print("complete")
+        elif command.startswith("discard"):
             # dicard current program
             current_program = None
             print("discarded program")
+        elif command.startswith("quit"):
+            # quit interface
+            return
         else: # help
             print_usage()
+        if current_program is not None:
+            print(current_program.to_string())
 
 
 if __name__ == "__main__":

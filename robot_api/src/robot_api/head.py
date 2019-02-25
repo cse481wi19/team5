@@ -290,7 +290,7 @@ class FullBodyLookAt(Head):
         super(FullBodyLookAt, self).__init__(tf_listener=tf_listener)
         self._base = robot_api.Base()
 
-    def look_at(self, stampedPoint):
+    def look_at(self, stampedPoint, turnHead=True):
         point_frame = stampedPoint.header.frame_id
         trans, rot = None, None
         A_frame = 'head_1_link'
@@ -326,20 +326,26 @@ class FullBodyLookAt(Head):
         target = [target_pan,target_tilt]
         print("target:",target)
 
-
-        if target_tilt < self.TILT_UP or target_tilt > self.TILT_DOWN:
-            print("Case 1: ")            
-            print("------------------Out of TILT range----------------------")
-            return False
-        elif target_pan < self.PAN_LEFT and target_pan > self.PAN_RIGHT:
-            print("Case 2: Turning head only")
-            self.pan_and_tilt(target_pan, target_tilt)
-            # print("WE CAN DO IT !!")
-            return True
+        if turnHead:
+            if target_tilt < self.TILT_UP or target_tilt > self.TILT_DOWN:
+                print("Case 1: ")            
+                print("------------------Out of TILT range----------------------")
+                return False
+            elif target_pan < self.PAN_LEFT and target_pan > self.PAN_RIGHT:
+                print("Case 2: Turning head only")
+                self.pan_and_tilt(target_pan, target_tilt)
+                # print("WE CAN DO IT !!")
+                return True
+            else:
+                print("Case 3: Turning body")
+                self._base.turn(target_pan)
+                self.pan_and_tilt(self.PAN_NEUTRAL, target_tilt)
+                # print("Turn my body-------******------Then get it!!!!")
+                return True
         else:
             print("Case 3: Turning body")
             self._base.turn(target_pan)
-            self.pan_and_tilt(self.PAN_NEUTRAL, target_tilt)
+            self.pan_and_tilt(self.PAN_NEUTRAL, self.TILT_NEUTRAL)
             # print("Turn my body-------******------Then get it!!!!")
             return True
 
@@ -371,8 +377,9 @@ class FullBodyLookAt(Head):
         dist = math.sqrt(x**2 + y**2)
         print("dist to point is", dist)
 
-        if (dist > 2):
-            self._base.go_forward(dist - 2, speed=0.3)
+        # if (dist > 2):
+        #     self._base.go_forward(dist - 2, speed=0.3)
+        self._base.go_forward(dist, speed=0.3)
 
 
     # PAN_LEFT = 0.78

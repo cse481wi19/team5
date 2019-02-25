@@ -32,6 +32,7 @@ def main():
     rate = rospy.Rate(2)
     while not rospy.is_shutdown():
         cloud.header.stamp = rospy.Time.now()
+        cloud.header.frame_id = "odom"
         pub.publish(cloud)
         rate.sleep()                                          
     

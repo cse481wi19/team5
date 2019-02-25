@@ -16,6 +16,7 @@ class ActuatorServer(object):
     def __init__(self):
         self._head = robot_api.Head(None)
         self._lights = robot_api.Lights()
+        # self._base = robot_api.Base()
 
     def handle_set_head(self, request):
         rospy.loginfo("sending move head")
@@ -34,6 +35,11 @@ class ActuatorServer(object):
         self._lights.all_leds()
         return SetLightsResponse(0.0)
 
+    # def handle_set_base(self, request):
+    #     rospy.loginfo("sending base move")
+
+    #     self._base.move(request.linear_speed, request.angular_speed)
+    #     return SetBaseResponse(0.0)
 
 def main():
     rospy.init_node('web_teleop_actuators')
