@@ -23,15 +23,19 @@ pygtk.require('2.0')
 import gtk
 
 import gobject
-import pygst
-pygst.require('0.10')
+#import pygst
+#pygst.require('0.10')
 gobject.threads_init()
-import gst
+#import gst
 
 from std_msgs.msg import String
+from std_msgs.msg import Bool
 from std_srvs.srv import *
 import os
 import commands
+import Queue
+import threading
+import alsaaudio
 
 class recognizer(object):
     """ GStreamer based speech recognizer. """
@@ -40,37 +44,41 @@ class recognizer(object):
         # Start node
         rospy.init_node("recognizer")
 
-        self._device_name_param = "~mic_name"  # Find the name of your microphone by typing pacmd list-sources in the terminal
+        self._audio_queue = Queue.Queue()
+        self._kill_audio = False
         self._lm_param = "~lm"
         self._dic_param = "~dict"
 
         # Configure mics with gstreamer launch config
-        if rospy.has_param(self._device_name_param):
-            self.device_name = rospy.get_param(self._device_name_param)
-            self.device_index = self.pulse_index_from_name(self.device_name)
-            self.launch_config = "pulsesrc device=" + str(self.device_index)
-            rospy.loginfo("Using: pulsesrc device=%s name=%s", self.device_index, self.device_name)
-        elif rospy.has_param('~source'):
-            # common sources: 'alsasrc'
-            self.launch_config = rospy.get_param('~source')
-        else:
-            self.launch_config = 'gconfaudiosrc'
+        # if rospy.has_param(self._device_name_param):
+        #     self.device_name = rospy.get_param(self._device_name_param)
+        #     self.device_index = self.pulse_index_from_name(self.device_name)
+        #     self.launch_config = "pulsesrc device=" + str(self.device_index)
+        #     rospy.loginfo("Using: pulsesrc device=%s name=%s", self.device_index, self.device_name)
+        # elif rospy.has_param('~source'):
+        #     # common sources: 'alsasrc'
+        #     self.launch_config = rospy.get_param('~source')
+        # else:
+        #     self.launch_config = 'gconfaudiosrc'
 
-        rospy.loginfo("Launch config: %s", self.launch_config)
+        #rospy.loginfo("Launch config: %s", self.launch_config)
 
-        self.launch_config += " ! audioconvert ! audioresample " \
-                            + '! vader name=vad auto-threshold=true ' \
-                            + '! pocketsphinx name=asr ! fakesink'
+        #self.launch_config += " ! audioconvert ! audioresample " \
+        #                    + '! vader name=vad auto-threshold=true ' \
+        #                    + '! pocketsphinx name=asr ! fakesink'
 
         # Configure ROS settings
         self.started = False
         rospy.on_shutdown(self.shutdown)
-        self.pub = rospy.Publisher('~output', String)
+        self.pub = rospy.Publisher('recognizer/audio_result', String)
         rospy.Service("~start", Empty, self.start)
         rospy.Service("~stop", Empty, self.stop)
+        rospy.Subscriber('recognizer/audio_ready', Bool, self.process_audio)
 
         if rospy.has_param(self._lm_param) and rospy.has_param(self._dic_param):
-            self.start_recognizer()
+            # start audio pulling thread
+            threading.Thread(target=self.get_audio).start()
+            #self.start_recognizer()
         else:
             rospy.logwarn("lm and dic parameters need to be set to start recognizer.")
 
@@ -123,11 +131,13 @@ class recognizer(object):
 
     def shutdown(self):
         """ Delete any remaining parameters so they don't affect next launch """
-        for param in [self._device_name_param, self._lm_param, self._dic_param]:
+        """ also param self._device_name_param, """
+        for param in [self._lm_param, self._dic_param]:
             if rospy.has_param(param):
                 rospy.delete_param(param)
 
-        """ Shutdown the GTK thread. """
+        """ Shutdown the GTK thread and audio thread. """
+        self._kill_audio = True
         gtk.main_quit()
 
     def start(self, req):
@@ -173,10 +183,30 @@ class recognizer(object):
         rospy.loginfo(msg.data)
         self.pub.publish(msg)
 
-    def process_audio(self, data):
+    def get_audio(self):
+        """ Used for audio parsing thread. """
+        device = 'sysdefault:CARD=Audio'
+        inp = alsaaudio.PCM(type=alsaaudio.PCM_CAPTURE, mode=alsaaudio.PCM_NORMAL, card=device)
+
+        inp.setchannels(1)
+        inp.setrate(16000)
+        inp.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+        inp.setperiodsize(1024)
+
+        pub = rospy.Publisher('recognizer/audio_ready', Bool)
+        while not (self._kill_audio):
+            _, data = inp.read()
+            self._audio_queue.put(data)
+            pub.publish(True)
+        return
+
+    def process_audio(self, isready):
+        """data is a message type, change it to get raw data.data list from class var """
         """Audio processing based on decoder config."""
         # Check if input audio has ended
-        self.decoder.process_raw(data.data, False, False)
+        assert(isready)
+        data = self._audio_queue.get()
+        self.decoder.process_raw(data, False, False)
         if self.decoder.get_in_speech() != self.in_speech_bf:
             self.in_speech_bf = self.decoder.get_in_speech()
             if not self.in_speech_bf:
@@ -187,6 +217,7 @@ class recognizer(object):
                 self.decoder.start.utt()
 
 if __name__ == "__main__":
+    rospy.loginfo("hi")
     start = recognizer()
     gtk.main()
 

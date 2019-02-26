@@ -27,7 +27,7 @@ def usage():
 
 if __name__ == '__main__':
 
-    device = 'sysdefault:CARD=Condor'
+    device = 'sysdefault:CARD=Audio'
 
     opts, args = getopt.getopt(sys.argv[1:], 'd:')
     for o, a in opts:
@@ -45,8 +45,8 @@ if __name__ == '__main__':
     inp = alsaaudio.PCM(type=alsaaudio.PCM_CAPTURE, mode=alsaaudio.PCM_NORMAL, card=device)
 
     # Set attributes: Mono, 48000 Hz, 16 bit little endian samples
-    inp.setchannels(2)
-    inp.setrate(48000)
+    inp.setchannels(1)
+    inp.setrate(16000)
     inp.setformat(alsaaudio.PCM_FORMAT_S16_LE)
 
     # The period size controls the internal number of frames per period.

@@ -1,14 +1,12 @@
 <launch>
 
-  <node name="recognizer" pkg="applications" type="recognizer.py" output="screen">
-    <param name="lm" value="$(find applications)/ava_custom_asr/1941.lm"/>
-    <param name="dict" value="$(find applications)/ava_custom_asr/1941.dic"/>
-    <param name="mic_name" value="alsa_input.usb-GEO_Semi_Condor"/>
-    <!-- use alsa_input.usb-Microsoft for desktop usb mic-->
+  <node name="ava_recognizer" pkg="applications" type="ava_asr_recognizer.py" output="screen">
+    <param name="lm" value="../ava_custom_asr/1941.lm"/>
+    <param name="dict" value="../ava_custom_asr/1941.dic"/>
   </node>
 
-  <node name="voice_cmd_vel" pkg="applications" type="voice_cmd_vel.py" output="screen">
-    <remap from="cmd_vel" to="avademo_node/cmd_vel"/>
+  <node name="ava_voice_cmd" pkg="applications" type="ava_voice_cmd.py" output="screen">
+    <remap from="cmd_vel" to="ava_voice_node/cmd_vel"/>
   </node>
 
 </launch>

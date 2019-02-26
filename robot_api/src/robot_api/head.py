@@ -245,22 +245,22 @@ class Head(object):
 
         cur_pan, cur_tilt = self.get_head_pos()
 
-        print("------------------*******************************--------------------")
-        print("------------------*******************************--------------------")
+        # print("------------------*******************************--------------------")
+        # print("------------------*******************************--------------------")
         # print("P_in_A:\n", P_in_A)
         # print("delta",delta)
         target_pan = cur_pan + alpha
         target_tilt = beta
         target = [target_pan,target_tilt]
-        print("target:",target)
+        # print("target:",target)
 
 
         if target_tilt < self.TILT_UP or target_tilt > self.TILT_DOWN or target_pan > self.PAN_LEFT or target_pan < self.PAN_RIGHT:
-            print("Case 1: ")            
-            print("------------------Out of range----------------------")
+            # print("Case 1: ")            
+            # print("------------------Out of range----------------------")
             return False
         else:
-            print("Case 2: Turning head only")
+            # print("Case 2: Turning head only")
             self.pan_and_tilt(target_pan, target_tilt, duration=duration)
             # print("WE CAN DO IT !!")
             return True
@@ -295,7 +295,7 @@ class FullBodyLookAt(Head):
         trans, rot = None, None
         A_frame = 'head_1_link'
         B_frame = point_frame
-        print(B_frame)
+        # print(B_frame)
         try:
             (trans, rot) = self._tf_listener.lookupTransform(A_frame, B_frame, rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
@@ -317,33 +317,33 @@ class FullBodyLookAt(Head):
 
         cur_pan, cur_tilt = self.get_head_pos()
 
-        print("------------------*******************************--------------------")
-        print("------------------*******************************--------------------")
+        # print("------------------*******************************--------------------")
+        # print("------------------*******************************--------------------")
         # print("P_in_A:\n", P_in_A)
         # print("delta",delta)
         target_pan = cur_pan + alpha
         target_tilt = beta
         target = [target_pan,target_tilt]
-        print("target:",target)
+        # print("target:",target)
 
         if turnHead:
             if target_tilt < self.TILT_UP or target_tilt > self.TILT_DOWN:
-                print("Case 1: ")            
-                print("------------------Out of TILT range----------------------")
+                # print("Case 1: ")            
+                # print("------------------Out of TILT range----------------------")
                 return False
             elif target_pan < self.PAN_LEFT and target_pan > self.PAN_RIGHT:
-                print("Case 2: Turning head only")
+                # print("Case 2: Turning head only")
                 self.pan_and_tilt(target_pan, target_tilt)
                 # print("WE CAN DO IT !!")
                 return True
             else:
-                print("Case 3: Turning body")
+                # print("Case 3: Turning body")
                 self._base.turn(target_pan)
                 self.pan_and_tilt(self.PAN_NEUTRAL, target_tilt)
                 # print("Turn my body-------******------Then get it!!!!")
                 return True
         else:
-            print("Case 3: Turning body")
+            # print("Case 3: Turning body")
             self._base.turn(target_pan)
             self.pan_and_tilt(self.PAN_NEUTRAL, self.TILT_NEUTRAL)
             # print("Turn my body-------******------Then get it!!!!")
@@ -375,7 +375,7 @@ class FullBodyLookAt(Head):
         x,y,z = P_in_A[0], P_in_A[1], P_in_A[2]
 
         dist = math.sqrt(x**2 + y**2)
-        print("dist to point is", dist)
+        # print("dist to point is", dist)
 
         # if (dist > 2):
         #     self._base.go_forward(dist - 2, speed=0.3)
