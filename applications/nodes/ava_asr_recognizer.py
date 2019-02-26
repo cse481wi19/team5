@@ -30,6 +30,8 @@ class AvaRecognizer(object):
         _lm_param = "~lm"
         # Dictionary
         _dict_param = "~dict"
+        # HMM Model
+        _hmm_param = "~hmm"
 
         # used in process_audio for piecing full utterances
         self.in_speech_bf = False
@@ -53,13 +55,13 @@ class AvaRecognizer(object):
         if rospy.has_param(_hmm_param):
             self.hmm = rospy.get_param(_hmm_param)
             if rospy.get_param(_hmm_param) == ":default":
-                if os.path.isdir("/usr/local/share/pocketsphinx/model"):
+                if os.path.isdir("/home/team5/.local/lib/python2.7/site-packages/pocketsphinx/model"):
                     rospy.loginfo("Loading the default acoustic model")
-                    self.hmm = "/usr/local/share/pocketsphinx/model/en-us/en-us"
+                    self.hmm = "/home/team5/.local/lib/python2.7/site-packages/pocketsphinx/model/en-us"
                     rospy.loginfo("Done loading the default acoustic model")
                 else:
                     rospy.logerr(
-                        "No language model specified. Couldn't find default model.")
+                        "Failed to find default model.")
                     return
         else:
             rospy.logerr(
@@ -81,6 +83,7 @@ class AvaRecognizer(object):
         # Setting configuration of decoder using provided params
         config.set_string('-dict', self.dict)
         config.set_string('-lm', self.class_lm)
+        config.set_string('-hmm', self.hmm)
         self.decoder = Decoder(config)
 
         # Start processing input audio
@@ -97,8 +100,7 @@ class AvaRecognizer(object):
         assert(isready)
         data = self._audio_queue.get()
         self.decoder.process_raw(data, False, False)
-        if self.decoder.get_in_speech() != self.in_speech_bf:a, False, False)
-        if self.decoder.get_in_spee
+        if self.decoder.get_in_speech() != self.in_speech_bf:
             self.in_speech_bf = self.decoder.get_in_speech()
             if not self.in_speech_bf:
                 self.decoder.end_utt()

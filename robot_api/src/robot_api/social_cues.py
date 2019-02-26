@@ -1,6 +1,7 @@
 import rospy
 import robot_api
 import kuri_api
+import os
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
 class Social_Cues(object):
@@ -14,6 +15,8 @@ class Social_Cues(object):
         self.move_head = move_head
         self._feedback_cb = feedback_cb
         self._done_cb = done_cb
+
+        self._sound_dir = os.getcwd() + "/../catkin_ws/src/cse481wi19/ava_custom_audio/"
 
     def nod_head(self, effort=1.0):
         point = None
@@ -87,7 +90,7 @@ class Social_Cues(object):
         cur_pan = cur_head_pos[0]
         self.lights.all_leds([pink_RGB]*self.lights.NUM_LEDS)
         if self.use_sounds:
-            self.sound_src.play('./files/bastion_happy_loud.wav')
+            self.sound_src.play(self._sound_dir + '/bastion_happy_loud.wav')
         self.head.eyes_to(-0.1)
         if self.move_head:
             self.head.pan_and_tilt(cur_pan, -0.4)
@@ -99,7 +102,7 @@ class Social_Cues(object):
         cur_pan = cur_head_pos[0]
         self.lights.all_leds([self.lights.BLUE]*self.lights.NUM_LEDS)
         if self.use_sounds:
-            self.sound_src.play('./files/bastion_sad_loud.wav')
+            self.sound_src.play(self._sound_dir + 'bastion_sad_loud.wav')
         self.head.eyes_to(0.15)
         if self.move_head:
             self.head.pan_and_tilt(cur_pan, 0)
@@ -113,3 +116,6 @@ class Social_Cues(object):
         self.lights.off()
         if self.move_head:
             self.head.pan_and_tilt(cur_pan, -0.3)
+
+    def play_sound(self, wavfile):
+        self.sound_src.play(wavfile)
