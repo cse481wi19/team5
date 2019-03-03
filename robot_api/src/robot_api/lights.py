@@ -66,9 +66,9 @@ class Lights(object):
         # TODO: Turn all LEDS to `color`
         msg = ChestLeds()
         for i in range(15):
-            msg.leds[i].red = color[i][0]
-            msg.leds[i].green = color[i][1]
-            msg.leds[i].blue = color[i][2]
+            msg.leds[i].red = color[0]
+            msg.leds[i].green = color[1]
+            msg.leds[i].blue = color[2]
         pub = rospy.Publisher('/mobile_base/commands/chest_leds', ChestLeds, queue_size=10)
         seconds = rospy.get_time()
         while rospy.get_time() - seconds < 0.1:

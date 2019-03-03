@@ -46,7 +46,7 @@ class Social_Cues(object):
         traj.points.append(reset_point)
 
         # set all green lights, send traj, reset lights
-        self.lights.all_leds([self.lights.GREEN]*self.lights.NUM_LEDS)
+        self.lights.all_leds(self.lights.GREEN)
         self.head.send_trajectory(traj=traj, feedback_cb=self._feedback_cb, done_cb=self._done_cb)
         self.head.wait_for_done(5)
         self.lights.off()
@@ -79,7 +79,7 @@ class Social_Cues(object):
         traj.points.append(reset_point)
 
         # set all red lights, send traj, reset lights
-        self.lights.all_leds([self.lights.RED]*self.lights.NUM_LEDS)
+        self.lights.all_leds(self.lights.RED)
         self.head.send_trajectory(traj=traj, feedback_cb=self._feedback_cb, done_cb=self._done_cb)
         self.head.wait_for_done(5)
         self.lights.off()
@@ -88,7 +88,7 @@ class Social_Cues(object):
         pink_RGB = (255, 50, 150)
         cur_head_pos = self.head.get_head_pos()
         cur_pan = cur_head_pos[0]
-        self.lights.all_leds([pink_RGB]*self.lights.NUM_LEDS)
+        self.lights.all_leds(pink_RGB)
         if self.use_sounds:
             self.sound_src.play(self._sound_dir + '/bastion_happy_loud.wav')
         self.head.eyes_to(-0.1)
@@ -100,7 +100,7 @@ class Social_Cues(object):
     def express_sad(self):
         cur_head_pos = self.head.get_head_pos()
         cur_pan = cur_head_pos[0]
-        self.lights.all_leds([self.lights.BLUE]*self.lights.NUM_LEDS)
+        self.lights.all_leds(self.lights.BLUE)
         if self.use_sounds:
             self.sound_src.play(self._sound_dir + 'bastion_sad_loud.wav')
         self.head.eyes_to(0.15)
@@ -116,6 +116,3 @@ class Social_Cues(object):
         self.lights.off()
         if self.move_head:
             self.head.pan_and_tilt(cur_pan, -0.3)
-
-    def play_sound(self, wavfile):
-        self.sound_src.play(wavfile)

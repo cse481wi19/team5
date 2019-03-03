@@ -10,28 +10,23 @@ voice_cmd_vel.py is a simple demo of speech recognition.
 import rospy
 import math
 import datetime
+import kuri_api
 import robot_api
 import os
+import random
 
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
 
 # STATES
-REST = 0            # no state
-                        # --> state 1 if user says I'm sad
-                        # --> state 3 if user says backpack
-STRESS_ASK = 1      # asked user "would you like help? or backpack?"
-                        # --> state 2 if user says yes help
-                        # --> state 3 if user says backpack
-                        # --> state 0 if user says no
-STRESS_HELP = 2     # user said "not ok". responded with help
-                        # --> state 2 if user says still not okay (give different help)
-                        # --> state 0 if user says better now
-BACKPACK = 3        # turned around for user to access backpack
-                        # --> state 0 if user says done/thanks
-
+REST = 0
+STRESS_ASK = 1
+STRESS_HELP = 2
+BACKPACK = 3
 # another state for if we prompted user "how are you doing"
 
+ENCOURAGEMENTS = ["/Breathe1.wav", "/Breathe2.wav", "/HereWithYou.wav", "/Snack.wav"]
+MORNING_MSGS = ["/GreatDay.wav", "/Stretching.wav", "/Breakfast.wav", "/Hydrated.wav"]
 
 class AvaVoiceCommand:
 
@@ -40,8 +35,10 @@ class AvaVoiceCommand:
         rospy.on_shutdown(self.cleanup)
         self.msg = Twist()
         self.social_cues = robot_api.Social_Cues()
+        self.lights = robot_api.Lights()
+        self.sound_src = kuri_api.SoundSource('AvaVoiceCommand')
 
-        self._state = REST
+        self._log_set_state(REST)
         self._abort = False
         self._sound_dir = os.getcwd() + "/../catkin_ws/src/cse481wi19/ava_custom_audio/"
 
@@ -62,29 +59,32 @@ class AvaVoiceCommand:
         if self._state is REST:
             if "I'M SAD" in msg.data \
                     or "FEELING SAD" in msg.data \
+                    or "I'M STRESSED" in msg.data \
                     or "FEELING STRESSED" in msg.data:
+                self._log_set_state(STRESS_ASK)
                 self.social_cues.express_sad()
-                # say "Would you like me to help? Or backpack?"
-                self._state = STRESS_ASK
-                self._abort_after(5)
+                self.wait_play_sound(self._sound_dir + "/HelpOrBackpack.wav")
+                self.wait_play_sound(self._sound_dir + "/bastion_confuse_loud.wav")
+                #self._abort_after(5)
 
             elif "GOOD MORNING" in msg.data:
                 self.social_cues.express_happy()
-                message = 'It is ' + datetime.datetime.now().strftime("%H:%M") + 'right now'
-                rospy.loginfo(message)
-                # say "Good morning" + time
-
+                # say Good morning + a nice message
+                self.wait_play_sound(self._sound_dir + "/GoodMorning.wav")
+                # randomly choose one
+                self.wait_play_sound(self._sound_dir + \
+                        MORNING_MSGS[random.randrange(len(MORNING_MSGS))])
+                
             elif "GOOD NIGHT" in msg.data:
                 self.social_cues.express_sad()
-                message = 'It is ' + datetime.datetime.now().strftime("%H:%M") + 'right now'
-                rospy.loginfo(message)
-                # say "Good night" + time
+                # say Good night, see you tomorrow
+                self.wait_play_sound(self._sound_dir + "/GoodNight.wav")
 
             elif "THANK" in msg.data:
                 self.social_cues.express_happy()
             
             elif "FAVORITE SONG" in msg.data or "MY SONG" in msg.data:
-                self.social_cues.play_sound(self._sound_dir + "/just_breathe.wav")
+                self.wait_play_sound(self._sound_dir + "/just_breathe.wav")
                 self.social_cues.nod_head()
 
             elif "YOUR BACKPACK" in msg.data:
@@ -93,13 +93,14 @@ class AvaVoiceCommand:
         elif self._state is STRESS_ASK:
             if "YOUR BACKPACK" in msg.data:
                 self._exe_backpack()   # --> state BACKPACK
-            elif "YES" in msg.data:
+            elif "YES THANK" in msg.data:
+                self._log_set_state(STRESS_HELP)
                 self._exe_help_msg()
-                self._state = STRESS_HELP
-            elif "NO" in msg.data:
+            elif "NO THANK" in msg.data:
                 # say okay, feel free to ask whenever
+                self.wait_play_sound(self._sound_dir + "/AskWhenever.wav")
                 self.social_cues.nod_head()
-                self._state = REST
+                self._log_set_state(REST)
             
         elif self._state is STRESS_HELP:
             if "I'M NOT" in msg.data:
@@ -109,41 +110,67 @@ class AvaVoiceCommand:
                     or "FEELING GOOD" in msg.data \
                     or "FEELING HAPPY" in msg.data \
                     or "THANK" in msg.data:
-                self.social_cues.express_happy()
-                self._state = REST
+          Head  self.wait_play_sound(self._sound_dir + "/bastion_hello_loud.wav")
+                self._log_set_state(REST)
 
         elif self._state is BACKPACK:
             if "THANK" in msg.data \
                     or "DONE" in msg.data:
                 # turn around, back up a little
                 self.social_cues.express_happy()
-                self._state = REST
+                self._log_set_state(REST)
         
         else:
             rospy.logerr("VOICE INTERACTION: ILLEGAL STATE")
-            self._state = REST
+            self._log_set_state(REST)
 
         self.social_cues.express_neutral()
         self.pub_.publish(self.msg)  # publishes empty twist message to stop
 
     def _exe_help_msg(self):
-        self.social_cues.play_sound(self._sound_dir + "/just_breathe_quiet.wav")
+        #self.wait_play_sound(self._sound_dir + "/just_breathe_quiet.wav")
         # play two random help messages over music
+        msg1 = random.randrange(len(ENCOURAGEMENTS))
+        msg2 = (msg1 + 1) % len(ENCOURAGEMENTS)
+        self.wait_play_sound(self._sound_dir + ENCOURAGEMENTS[msg1])
+        self.wait_play_sound(self._sound_dir + ENCOURAGEMENTS[msg2])
+        rospy.sleep(5)
         # ask are you feeling better
-        self._abort_after(5)
+        self.wait_play_sound(self._sound_dir + "/HelpMore.wav")
+        #self._abort_after(5)
 
     def _exe_backpack(self):
         self.social_cues.nod_head()
-        # move to user and turn around
-        self._state = BACKPACK
-        self._abort_after(15)
+        self.wait_play_sound(self._sound_dir + "/OnMyWay.wav")
+        # TODO move to user and turn around
+        self._log_set_state(BACKPACK)
+        #self._abort_after(15)
 
     def _abort_after(self, n):
-        """ aborts after n seconds """
+        """ aborts after n seconds
+        TODO: this currently blocks. find another way to abort after n seconds """
         self._abort = True
-        rospy.sleep(n)
+        ring = [self.lights.OFF] * self.lights.NUM_LEDS
+        for i in self.lights.LED_OUTER_RING:
+            ring[i] = self.lights.BLUE
+        for x in range(n):
+            # pulse lights
+            self.lights.put_pixels(ring)
+            rospy.sleep(0.5)
+            self.lights.all_leds(self.lights.OFF)
+            rospy.sleep(0.5)
         if (self._abort):
-            self._state = REST
+            rospy.loginfo("ABORT INTERACTION: STATE RESET TO REST")
+            self._log_set_state(REST)
+
+    def _log_set_state(self, state):
+        self._state = state
+        rospy.loginfo("AvaVoiceCommand: CHANGED STATE=" + str(state))
+
+    def wait_play_sound(self, wavfile):
+        while self.sound_src.is_playing:
+            rospy.sleep(0.25)
+        self.sound_src.play(wavfile)
 
     def cleanup(self):
         # stop the robot!
