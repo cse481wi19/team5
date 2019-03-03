@@ -110,7 +110,11 @@ class AvaVoiceCommand:
                     or "FEELING GOOD" in msg.data \
                     or "FEELING HAPPY" in msg.data \
                     or "THANK" in msg.data:
+<<<<<<< HEAD
           Head  self.wait_play_sound(self._sound_dir + "/bastion_hello_loud.wav")
+=======
+                self.wait_play_sound(self._sound_dir + "/bastion_hello_loud.wav")
+>>>>>>> e1339233cc58b10dc3d38c85d760ddc3d4dee4f5
                 self._log_set_state(REST)
 
         elif self._state is BACKPACK:
