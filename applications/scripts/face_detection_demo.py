@@ -128,7 +128,7 @@ class FDDemo(object):
         lightarray = [self.lights.OFF] * self.lights.NUM_LEDS
         for i in xrange(num):
             lightarray[self.lights.NUM_LEDS - 1 - i] = self.lights.RED
-        self.lights.all_leds(lightarray)
+        self.lights.put_pixels(lightarray)
 
     def generatePointStamped(self, face):
         # 3ft 0.08

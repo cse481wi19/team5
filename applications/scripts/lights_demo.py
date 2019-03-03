@@ -31,13 +31,13 @@ def main():
     if command == 'off':
         lights.off()
     elif command == 'on':
-        lights.all_leds([lights.BLUE]*lights.NUM_LEDS)
+        lights.all_leds(lights.BLUE)
     elif command == 'color':
         count = 0
         color = [lights.RED, lights.BLUE, lights.GREEN]
         while True:
             num = count % 3
-            lights.put_pixels([color[num]]*lights.NUM_LEDS)
+            lights.all_leds(color[num])
             count += 1  
     else:
         print_usage()
