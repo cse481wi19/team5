@@ -11,6 +11,9 @@ find_package(catkin REQUIRED
         mayfield_msgs
         message_generation
         sensor_msgs
+        actionlib_msgs
+        nav_msgs
+        geometry_msgs
         )
 
 add_message_files(

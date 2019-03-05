@@ -8,6 +8,8 @@
   <buildtool_depend>catkin</buildtool_depend>
   <depend>roscpp</depend>
   <depend>rospy</depend>
+  <depend>actionlib</depend>
+  <depend></depend>
   <export>
   </export>
 </package>
