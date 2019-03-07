@@ -1,0 +1,7 @@
+{
+  "name": "web-interface",
+  "short_name": "web-interface",
+  "description": "Web interface for displaying information about Ava",
+  "start_url": "/",
+  "display": "standalone"
+}

@@ -1,0 +1,81 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/ros-websocket/ros-websocket.html">
+<link rel="import" href="../bower_components/ros-service/ros-service.html">
+
+<dom-module id="web-interface-app">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      #camera img {
+        width: 25%;
+        height: auto;
+      }
+    </style>
+
+    <ros-websocket auto ros="{{ros}}" url="{{url}}" on-connection="_handleConnection" on-close="_handleClose"
+      on-error="_handleError"></ros-websocket>
+
+    <ros-service id="sendWaypointService" on-response="_handleSendWaypointSuccess" on-fail="_handleSendWaypointError"
+      name="/web_teleop/send_waypoint" ros="{{ros}}" service-type="web_teleop/SendWaypoint"></ros-service>
+
+
+    <h2>Hello world!</h2>
+    <h4>{{status}}</h4>
+    <div id="camera">
+      <img src="//[[hostname]]:8000/stream?topic=/head_camera/rgb/image_raw"></img>
+    </div>
+  </template>
+
+  <script>
+    /**
+     * @customElement
+     * @polymer
+     */
+    class WebInterfaceApp extends Polymer.Element {
+      ready() {
+        super.ready();
+        this.hostname = window.location.hostname;
+      }
+
+      static get is() { return 'web-interface-app'; }
+
+      static get properties() {
+        return {
+          // prop1: {
+          //   type: String,
+          //   value: 'web-interface-app'
+          // }
+        };
+      }
+
+      _handleConnection() {
+        this.status = 'Connected to the websocket server.';
+        console.log(this.status);
+      }
+      _handleClose() {
+        this.status = 'Closed connection to the websocket server.';
+        console.log(this.status);
+      }
+      _handleError() {
+        this.status = 'Error connecting to the websocket server.';
+        console.log(this.status);
+      }
+
+      _sendWaypoint() {
+        this.status = 'Sending waypoint: X: ' + this.xPos + ', Y: ' + this.yPos + ', Z orientation: ' + this.zOrient + ', W orientation: ' + this.wOrient;
+        this.$.sendWaypointSevice.call({ xPos: this.xPos, yPos: this.yPos, zOrient: this.zOrient, wOrient: this.wOrient });
+      }
+      _handleSendWaypointSuccess() {
+        this.status = 'Sucessfully navigated to waypoint: X: ' + this.xPos + ', Y: ' + this.yPos + ', Z orientation: ' + this.zOrient + ', W orientation: ' + this.wOrient;
+      }
+      _handleSendWaypointError(evt) {
+        this.status = 'Error: ' + evt.detail;
+      }
+    }
+
+    window.customElements.define(WebInterfaceApp.is, WebInterfaceApp);
+  </script>
+</dom-module>
