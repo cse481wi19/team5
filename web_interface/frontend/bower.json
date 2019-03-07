@@ -3,10 +3,18 @@
   "description": "Web interface for displaying information about Ava",
   "main": "index.html",
   "dependencies": {
-    "polymer": "Polymer/polymer#^2.0.0"
+    "polymer": "Polymer/polymer#^2.0.0",
+    "paper-number-input": "Zecat/paper-number-input#^1.1.0",
+    "paper-button": "PolymerElements/paper-button#^3.0.1",
+    "paper-input": "PolymerElements/paper-input#^3.0.1",
+    "paper-slider": "PolymerElements/paper-slider#^3.0.2"
   },
   "devDependencies": {
     "web-component-tester": "Polymer/web-component-tester#^6.0.0",
     "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0"
+  },
+  "resolutions": {
+    "paper-button": "^3.0.1",
+    "paper-input": "^3.0.1"
   }
 }
