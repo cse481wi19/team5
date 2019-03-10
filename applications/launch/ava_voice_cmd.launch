@@ -1,8 +1,8 @@
 <launch>
 
   <node name="ava_recognizer" pkg="applications" type="ava_asr_recognizer.py" output="screen">
-    <param name="lm" value="$(find applications)/ava_custom_asr/1941.lm"/>
-    <param name="dict" value="$(find applications)/ava_custom_asr/1941.dic"/>
+    <param name="lm" value="$(find applications)/ava_custom_asr/6733.lm"/>
+    <param name="dict" value="$(find applications)/ava_custom_asr/6733.dic"/>
     <param name="hmm" value=":default"/>
   </node>
 
