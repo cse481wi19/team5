@@ -7,7 +7,10 @@
     "paper-number-input": "Zecat/paper-number-input#^1.1.0",
     "paper-button": "PolymerElements/paper-button#^3.0.1",
     "paper-input": "PolymerElements/paper-input#^3.0.1",
-    "paper-slider": "PolymerElements/paper-slider#^3.0.2"
+    "paper-slider": "PolymerElements/paper-slider#^3.0.2",
+    "ros-websocket": "jstnhuang/ros-websocket#^4.0.0",
+    "ros-topic": "jstnhuang/ros-topic#^1.0.0",
+    "ros-service": "jstnhuang/ros-service#^2.0.1"
   },
   "devDependencies": {
     "web-component-tester": "Polymer/web-component-tester#^6.0.0",

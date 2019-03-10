@@ -8,6 +8,7 @@
 
 <dom-module id="web-interface-app">
   <template>
+    <style is="custom-style" include="iron-flex"></style>
     <style>
       :host {
         display: block;
@@ -33,12 +34,20 @@
     <ros-service id="sendWaypointService" on-response="_handleSendWaypointSuccess" on-fail="_handleSendWaypointError"
       name="/web_interface/send_waypoint" ros="{{ros}}" service-type="web_interface/SendWaypoint"></ros-service>
 
-    <ros-topic auto ros="{{ros}}" topic="recognizer/asr_output" msg-type="std_msgs/String"
+    <ros-topic auto id="voiceCommandTopic" ros="{{ros}}" topic="recognizer/asr_output" msg-type="std_msgs/String"
       last-message="{{voiceCommand}}" on-message="_handleNewVoiceCommand"></ros-topic>
+
+    <ros-topic auto id="basicPoseTopic" ros="{{ros}}" topic="laser_amcl_basic_pose" msg-type="geometry_msgs/PoseStamped"
+      last-message="{{basicPose}}" on-message="handleAmclPose"></ros-topic>
+
+    <ros-topic auto id="visionResultTopic" ros="{{ros}}" topic="vision/results" msg-type="vision_msgs/FrameResults"
+      last-message="{{visionResult}}"></ros-topic>
 
 
     <h2>Ava Overview</h2>
-    <h4>{{status}}</h4>
+    <div>{{status}}</div>
+    <div>{{basicPose.header.frame_id}}</div>
+    <div>{{visionResult}}</div>
     <div id="camera">
       <img src="//[[hostname]]:8000/stream?topic=/head_camera/rgb/image_raw"></img>
     </div>
@@ -47,10 +56,10 @@
 
     <div class="layout vertical">
       <div class="layout horizontal">
-        <paper-input label="X position" value="{{xPos}}" }> </paper-input>
-        <paper-input label="Y position" value="{{yPos}}" }> </paper-input>
-        <paper-input label="Z orientation" value="{{zOrient}}" }> </paper-input>
-        <paper-input label="W orientation" value="{{wOrient}}" }> </paper-input>
+        <paper-input label="X position" value="{{xPos}}"> </paper-input>
+        <paper-input label="Y position" value="{{yPos}}"> </paper-input>
+        <paper-input label="Z orientation" value="{{zOrient}}"> </paper-input>
+        <paper-input label="W orientation" value="{{wOrient}}"> </paper-input>
       </div>
       <div class="layout horizontal">
         <paper-button on-click="_sendWaypoint">Send Waypoint</paper-button>
@@ -88,10 +97,12 @@
         this.status = 'Connected to the websocket server.';
         console.log(this.status);
       }
+
       _handleClose() {
         this.status = 'Closed connection to the websocket server.';
         console.log(this.status);
       }
+
       _handleError() {
         this.status = 'Error connecting to the websocket server.';
         console.log(this.status);
@@ -99,7 +110,7 @@
 
       _sendWaypoint() {
         this.status = 'Sending waypoint: X: ' + this.xPos + ', Y: ' + this.yPos + ', Z orientation: ' + this.zOrient + ', W orientation: ' + this.wOrient;
-        this.$.sendWaypointSevice.call({ xPos: this.xPos, yPos: this.yPos, zOrient: this.zOrient, wOrient: this.wOrient });
+        this.$.sendWaypointService.call({ xPos: parseFloat(this.xPos), yPos: parseFloat(this.yPos), zOrient: parseFloat(this.zOrient), wOrient: parseFloat(this.wOrient) });
       }
 
       _handleSendWaypointSuccess() {
@@ -112,6 +123,12 @@
 
       _handleNewVoiceCommand(evt) {
         this.voiceCommandHistory.push(evt.detail)
+      }
+
+      handleAmclPose(evt) {
+        var message = evt.detail;
+        this.basicPose = "got message";
+        console.log(message.header.frame_id);
       }
     }
 

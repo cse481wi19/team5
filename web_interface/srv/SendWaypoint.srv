@@ -1,6 +1,6 @@
 float64 xPos
 float64 yPos
 float64 zOrient
-float65 wOrient
+float64 wOrient
 ---
 bool success

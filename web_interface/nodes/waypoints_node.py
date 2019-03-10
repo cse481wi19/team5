@@ -33,8 +33,9 @@ class NavWaypointServer(object):
         Ypos = request.yPos
         Zorient = request.zOrient
         Worient = request.wOrient
-
+        rospy.loginfo("about to send waypoint")
         result = self.send_waypoint(Xpos, Ypos, Zorient, Worient)
+        rospy.loginfo("response is " + str(SendWaypointResponse(result)))
         return SendWaypointResponse(result)
 
     def send_waypoint(self, Xpos, Ypos, Zorient, Worient, feedback_cb=None, transition_cb=None):
