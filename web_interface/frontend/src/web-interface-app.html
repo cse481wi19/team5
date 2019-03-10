@@ -1,6 +1,10 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/ros-websocket/ros-websocket.html">
 <link rel="import" href="../bower_components/ros-service/ros-service.html">
+<link rel="import" href="../bower_components/ros-topic/ros-topic.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 
 <dom-module id="web-interface-app">
   <template>
@@ -13,19 +17,44 @@
         width: 25%;
         height: auto;
       }
+
+      paper-button {
+        background-color: #eee;
+      }
+
+      paper-input {
+        width: 100px;
+      }
     </style>
 
     <ros-websocket auto ros="{{ros}}" url="{{url}}" on-connection="_handleConnection" on-close="_handleClose"
       on-error="_handleError"></ros-websocket>
 
     <ros-service id="sendWaypointService" on-response="_handleSendWaypointSuccess" on-fail="_handleSendWaypointError"
-      name="/web_teleop/send_waypoint" ros="{{ros}}" service-type="web_teleop/SendWaypoint"></ros-service>
+      name="/web_interface/send_waypoint" ros="{{ros}}" service-type="web_interface/SendWaypoint"></ros-service>
+
+    <ros-topic auto ros="{{ros}}" topic="recognizer/asr_output" msg-type="std_msgs/String"
+      last-message="{{voiceCommand}}" on-message="_handleNewVoiceCommand"></ros-topic>
 
 
-    <h2>Hello world!</h2>
+    <h2>Ava Overview</h2>
     <h4>{{status}}</h4>
     <div id="camera">
       <img src="//[[hostname]]:8000/stream?topic=/head_camera/rgb/image_raw"></img>
+    </div>
+    <h4>Last voice command detected: {{voiceCommand}}</h4>
+    <div>History: {{voiceCommandHistory}}</div>
+
+    <div class="layout vertical">
+      <div class="layout horizontal">
+        <paper-input label="X position" value="{{xPos}}" }> </paper-input>
+        <paper-input label="Y position" value="{{yPos}}" }> </paper-input>
+        <paper-input label="Z orientation" value="{{zOrient}}" }> </paper-input>
+        <paper-input label="W orientation" value="{{wOrient}}" }> </paper-input>
+      </div>
+      <div class="layout horizontal">
+        <paper-button on-click="_sendWaypoint">Send Waypoint</paper-button>
+      </div>
     </div>
   </template>
 
@@ -38,6 +67,10 @@
       ready() {
         super.ready();
         this.hostname = window.location.hostname;
+        this.xPos = 0;
+        this.yPos = 0;
+        this.zOrient = 0;
+        this.wOrient = 0;
       }
 
       static get is() { return 'web-interface-app'; }
@@ -68,11 +101,17 @@
         this.status = 'Sending waypoint: X: ' + this.xPos + ', Y: ' + this.yPos + ', Z orientation: ' + this.zOrient + ', W orientation: ' + this.wOrient;
         this.$.sendWaypointSevice.call({ xPos: this.xPos, yPos: this.yPos, zOrient: this.zOrient, wOrient: this.wOrient });
       }
+
       _handleSendWaypointSuccess() {
         this.status = 'Sucessfully navigated to waypoint: X: ' + this.xPos + ', Y: ' + this.yPos + ', Z orientation: ' + this.zOrient + ', W orientation: ' + this.wOrient;
       }
+
       _handleSendWaypointError(evt) {
         this.status = 'Error: ' + evt.detail;
+      }
+
+      _handleNewVoiceCommand(evt) {
+        this.voiceCommandHistory.push(evt.detail)
       }
     }
 

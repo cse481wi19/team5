@@ -3,3 +3,4 @@ float64 yPos
 float64 zOrient
 float65 wOrient
 ---
+bool success
