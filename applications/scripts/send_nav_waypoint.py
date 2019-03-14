@@ -17,7 +17,6 @@ def wait_for_time():
     while rospy.Time().now().to_sec() == 0:
         pass
 
-
 def print_usage():
     print 'Usage:'
     print '    rosrun applications send_nav_waypoint.py Xpos Ypos Zorient Worient'
@@ -60,6 +59,9 @@ class NavWaypoint(object):
         self.goalHandle = self.actionClient.send_goal(self.goal, _handle_transition, _handle_feedback)
         self.wait_for_done(5)
         return True
+
+    def send_origin_waypoint(self, feedback_cb=None, transition_cb=None):
+        return self.send_waypoint(0, 0, 1, 0, feedback_cb=feedback_cb, transition_cb=transition_cb)
 
 
     def update_pose(self, pose):

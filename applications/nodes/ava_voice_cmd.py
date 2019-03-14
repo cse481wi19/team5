@@ -16,8 +16,10 @@ import os
 import random
 import threading
 
+from face_behavior import FaceBehavior
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
+from send_nav_waypoint import NavWaypoint
 
 # STATES
 REST = 0
@@ -26,6 +28,7 @@ STRESS_HELP = 2
 BACKPACK = 3
 PROMPT = 4
 
+PROMPTS = ["/HowAreYouDoing.wav", "/HowAreYouFeeling.wav"]
 ENCOURAGEMENTS = ["/Breathe1.wav", "/Breathe2.wav", "/HereWithYou.wav", "/Snack.wav"]
 MORNING_MSGS = ["/GreatDay.wav", "/Stretching.wav", "/Breakfast.wav", "/Hydrated.wav"]
 
@@ -39,13 +42,19 @@ class AvaVoiceCommand:
         self.lights = robot_api.Lights()
         self.sound_src = kuri_api.SoundSource('AvaVoiceCommand')
         self.sound_src_music = kuri_api.SoundSource('AvaVoiceCommand-music')
+        self._base = robot_api.Base()
+        self._head = robot_api.Head()
+        self._face_behavior = FaceBehavior()
+        self._nav_waypoint = NavWaypoint()
+        self._sleeping = False
+
         
         self._kill_prompt_thread = False
         threading.Thread(target=self._prompt_thread).start()
         rospy.on_shutdown(self.cleanup)
 
         self._log_set_state(REST)
-        self._sound_dir = os.getcwd() + "/../catkin_ws/src/cse481wi19/ava_custom_audio/"
+        self._sound_dir = os.path.expanduser('~') + "/catkin_ws/src/cse481wi19/ava_custom_audio"
 
         # publish to cmd_vel (publishes empty twist message to stop), subscribe to speech output
         self.pub_ = rospy.Publisher('cmd_vel', Twist, queue_size=10)
@@ -55,7 +64,8 @@ class AvaVoiceCommand:
     def promptUser(self):
         """ Proactively prompts user, asking "Are you feeling okay?" """
         self._state = PROMPT
-        self.wait_play_sound(self._sound_dir + "/FeelingOk.wav")
+        self.wait_play_sound(self._sound_dir + "/bastion_hello_loud.wav")
+        self.wait_play_sound(self._sound_dir + PROMPTS[random.randrange(1)])
         self._abort_after(20)
 
     def speechCb(self, msg):
@@ -68,10 +78,13 @@ class AvaVoiceCommand:
                     or "FEELING SAD" in msg.data \
                     or "I'M STRESSED" in msg.data \
                     or "FEELING STRESSED" in msg.data:
+                self._sleeping = False
                 self._exe_offer_help()
 
             elif "GOOD MORNING" in msg.data:
+                self._sleeping = False
                 self.social_cues.express_happy()
+
                 # say Good morning + a nice message
                 self.wait_play_sound(self._sound_dir + "/GoodMorning.wav")
                 # randomly choose one
@@ -79,16 +92,20 @@ class AvaVoiceCommand:
                         MORNING_MSGS[random.randrange(len(MORNING_MSGS))])
                 
             elif "GOOD NIGHT" in msg.data:
+                self._sleeping = True
                 self.social_cues.express_sad()
                 # say Good night, see you tomorrow
                 self.wait_play_sound(self._sound_dir + "/GoodNight.wav")
-                #TODO go back to charging station, close eyes
+                # go back to charging station, close eyes
+                self._nav_waypoint.send_origin_waypoint()
+                self.social_cues.go_to_sleep()
 
             elif "THANK YOU" in msg.data:
                 self.social_cues.express_happy()
             
             elif "PLAY" in msg.data and \
                     ("FAVORITE SONG" in msg.data or "MY SONG" in msg.data):
+                self._sleeping = False
                 self.wait_play_music(self._sound_dir + "/just_breathe.wav")
                 self.social_cues.nod_head()
 
@@ -120,30 +137,33 @@ class AvaVoiceCommand:
         elif self._state is BACKPACK:
             if "THANK" in msg.data \
                     or "DONE" in msg.data:
-                # TODO: turn around, back up a little
                 self.social_cues.express_happy()
+                self._base.go_forward(0.5)
+                self._base.turn(3.14)
                 self._log_set_state(REST)
         
         elif self._state is PROMPT:
-            if "YES" in msg.data \
-                    or "I'M OKAY" in msg.data:
-                self.wait_play_sound(self._sound_dir + "/AskWhenever.wav")
-                self.social_cues.nod_head()
-                self._log_set_state(REST)
-            elif "NO" in msg.data:
-                self._exe_offer_help()
+            if "I'M" in msg.data:
+                rospy.loginfo("Hello I'm here")
+                if (("NOT" in msg.data or "NO" in msg.data) and ("GOOD" in msg.data or "OKAY" in msg.data)) \
+                        or "SAD" in msg.data:
+                    self._exe_offer_help
+                elif "GOOD" in msg.data or "OKAY" in msg.data:
+                    self.wait_play_sound(self._sound_dir + "/AskWhenever.wav")
+                    self.social_cues.nod_head()
+                    self._log_set_state(REST)
 
         else:
             rospy.logerr("VOICE INTERACTION: ILLEGAL STATE")
             self._log_set_state(REST)
 
-        self.social_cues.express_neutral()
-        self.pub_.publish(self.msg)  # publishes empty twist message to stop
+        #self.social_cues.express_neutral()
+        #self.pub_.publish(self.msg)  # publishes empty twist message to stop
 
     def _exe_offer_help(self):
         self._log_set_state(STRESS_ASK)
         self.social_cues.express_sad()
-        self.wait_play_sound(self._sound_dir + "/HelpOrBackpack.wav")
+        self.wait_play_sound(self._sound_dir + "/HelpOrBackpackV2.wav")
         self.wait_play_sound(self._sound_dir + "/bastion_confuse_loud.wav")
         self._abort_after(20)
 
@@ -162,7 +182,9 @@ class AvaVoiceCommand:
     def _exe_backpack(self):
         self.wait_play_sound(self._sound_dir + "/OnMyWay.wav")
         self.social_cues.nod_head()
-        # TODO move to user and turn around
+        # move to user and turn around
+        self._face_behavior.moveCloser()
+        self._base.turn(3.14)
         self._log_set_state(BACKPACK)
         self._abort_after(60)
 
@@ -201,8 +223,8 @@ class AvaVoiceCommand:
         d = rospy.Duration(secs=180)
         rospy.sleep(5)
         while not self._kill_prompt_thread:
-            # TODO: if {am_following_user} and state is rest, then prompt:
-            if self._state is REST:
+            # if {am following user} or {see a face} and state is rest, then prompt:
+            if self._state is REST and not self._sleeping and self._face_behavior.num_faces is not 0:
                 self.promptUser()
             rospy.sleep(d)
         rospy.loginfo("PROMPT THREAD KILLED")

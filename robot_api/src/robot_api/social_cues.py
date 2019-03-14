@@ -16,7 +16,7 @@ class Social_Cues(object):
         self._feedback_cb = feedback_cb
         self._done_cb = done_cb
 
-        self._sound_dir = os.getcwd() + "/../catkin_ws/src/cse481wi19/ava_custom_audio/"
+        self._sound_dir = os.path.expanduser('~') + "/catkin_ws/src/cse481wi19/ava_custom_audio"
 
     def nod_head(self, effort=1.0):
         point = None
@@ -102,7 +102,7 @@ class Social_Cues(object):
         cur_pan = cur_head_pos[0]
         self.lights.all_leds(self.lights.BLUE)
         if self.use_sounds:
-            self.sound_src.play(self._sound_dir + 'bastion_sad_loud.wav')
+            self.sound_src.play(self._sound_dir + '/bastion_sad_loud.wav')
         self.head.eyes_to(0.15)
         if self.move_head:
             self.head.pan_and_tilt(cur_pan, 0)
@@ -116,3 +116,12 @@ class Social_Cues(object):
         self.lights.off()
         if self.move_head:
             self.head.pan_and_tilt(cur_pan, -0.3)
+
+    def go_to_sleep(self):
+        self.head.pan_and_tilt(self.head.PAN_NEUTRAL, self.head.TILT_DOWN)
+        self.head.eyes_to(self.head.EYES_CLOSED_BLINK)
+        self.head.eyes_to(self.head.EYES_OPEN)
+        rospy.sleep(rospy.Duration(nsecs=0.3 * 1e9))
+        self.head.eyes_to(self.head.EYES_CLOSED_BLINK)
+        self.head.eyes_to(self.head.EYES_SUPER_SAD)
+        self.head.eyes_to(self.head.EYES_CLOSED)

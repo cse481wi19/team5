@@ -10,7 +10,7 @@ def print_usage():
     # `eyes`, naturally, is Kuri only.
     print 'Usage:'
     print ' RUN IN BASE DIRECTORY (need ./files)'
-    print '    rosrun applications social_cues_demo.py <nod/shake/happy/sad/neutral>'
+    print '    rosrun applications social_cues_demo.py <nod/shake/happy/sad/neutral/sleep>'
 
 
 def wait_for_time():
@@ -41,6 +41,8 @@ def main():
         cues.express_sad()
     elif command == 'neutral':
         cues.express_neutral()
+    elif command == 'sleep':
+        cues.go_to_sleep()
     else:
         print_usage()
 

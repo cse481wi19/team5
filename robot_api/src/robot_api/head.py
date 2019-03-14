@@ -334,13 +334,13 @@ class FullBodyLookAt(Head):
             elif target_pan < self.PAN_LEFT and target_pan > self.PAN_RIGHT:
                 # print("Case 2: Turning head only")
                 self.pan_and_tilt(target_pan, target_tilt)
-                # print("WE CAN DO IT !!")
+                print("WE CAN DO IT !!")
                 return True
             else:
-                # print("Case 3: Turning body")
+                print("Case 3: Turning body")
                 self._base.turn(target_pan)
                 self.pan_and_tilt(self.PAN_NEUTRAL, target_tilt)
-                # print("Turn my body-------******------Then get it!!!!")
+                print("Turn my body-------******------Then get it!!!!")
                 return True
         else:
             # print("Case 3: Turning body")
@@ -352,7 +352,7 @@ class FullBodyLookAt(Head):
     def move_to(self, stampedPoint):
         point_frame = stampedPoint.header.frame_id
         trans, rot = None, None
-        A_frame = 'head_1_link'
+        A_frame = 'map'
         B_frame = point_frame
         try:
             (trans, rot) = self._tf_listener.lookupTransform(A_frame, B_frame, rospy.Time(0))

@@ -17,8 +17,7 @@ class FDDemo(object):
         rospy.init_node('face_detect_demo')
         self.wait_for_time()
         self.lights = robot_api.Lights()
-        rospy.sleep(0.5)
-        self.head = robot_api.FullBodyLookAt(tf_listener=tf.TransformListener())
+        self.head = robot_api.Head(tf_listener=tf.TransformListener())
         self.body = robot_api.Base()
         self.social_cues = robot_api.Social_Cues(move_head=False, use_sounds=False)
         self.publisher = rospy.Publisher('face_pose_marker', Marker, queue_size=10)
@@ -52,7 +51,6 @@ class FDDemo(object):
                     self.social_cues.express_neutral()
                 self.face_already_seen = True
             if ThreeD:
-                # rospy.sleep(0.5)
                 pointStamped = self.generatePointStamped(facesarray.faces[0])
                 # print("++++++++++++PS+++++++++++\n",pointStamped,"\n")
                 marker = Marker(
@@ -64,48 +62,47 @@ class FDDemo(object):
                     header=Header(frame_id=pointStamped.header.frame_id),
                     color=ColorRGBA(1.0, 1.0, 1.0, 0.8),)
                 self.publisher.publish(marker)
-                # self.head.look_at(pointStamped, duration=0.1)
-                self.head.look_at(pointStamped)
+                self.head.look_at(pointStamped, duration=0.1)
             else:
-                # delta_head, delta_rotate, delta_move = 0.05, 0.2, 0.3
+                delta_head, delta_rotate, delta_move = 0.05, 0.2, 0.3
 
-                # center = facesarray.faces[0].center
-                # facesize = facesarray.faces[0].size
-                # delta_pan, delta_tilt, delta_dis, delta_turn = 0, 0, 0, 0
+                center = facesarray.faces[0].center
+                facesize = facesarray.faces[0].size
+                delta_pan, delta_tilt, delta_dis, delta_turn = 0, 0, 0, 0
 
             
-                # if center.x > 0.6:
-                #     delta_pan = -delta_head
-                # elif center.x < 0.4:
-                #     delta_pan = delta_head
+                if center.x > 0.6:
+                    delta_pan = -delta_head
+                elif center.x < 0.4:
+                    delta_pan = delta_head
                 
-                # if center.y > 0.6:
-                #     delta_tilt = delta_head
-                # elif center.y < 0.4:
-                #     delta_tilt = -delta_head
+                if center.y > 0.6:
+                    delta_tilt = delta_head
+                elif center.y < 0.4:
+                    delta_tilt = -delta_head
 
-                # if facesize > 0.04:
-                #     delta_dis = -delta_move
-                # elif facesize < 0.01:
-                #     delta_dis = delta_move
+                if facesize > 0.04:
+                    delta_dis = -delta_move
+                elif facesize < 0.01:
+                    delta_dis = delta_move
 
 
-                # if center.x > 0.6 and delta_dis is not 0:
-                #     delta_turn = -delta_rotate
-                # elif center.x < 0.4 and delta_dis is not 0:
-                #     delta_turn = delta_rotate
+                if center.x > 0.6 and delta_dis is not 0:
+                    delta_turn = -delta_rotate
+                elif center.x < 0.4 and delta_dis is not 0:
+                    delta_turn = delta_rotate
 
-                # print "center: " + str(center)
-                # print "delta_pan: " + str(delta_pan)
-                # print "delta_tilt:" + str(delta_tilt)
-                # # print("face size:", facesize)
-                # # print("move distance", delta_dis)
-                # if self.move_command:
-                #     if delta_dis == 0:
-                #         self.move_command = False
-                #     else:
-                #         self.body.move(delta_dis, delta_turn)
-                # self.head.head_move(delta_pan, delta_tilt, duration=0.05)
+                print "center: " + str(center)
+                print "delta_pan: " + str(delta_pan)
+                print "delta_tilt:" + str(delta_tilt)
+                # print("face size:", facesize)
+                # print("move distance", delta_dis)
+                if self.move_command:
+                    if delta_dis == 0:
+                        self.move_command = False
+                    else:
+                        self.body.move(delta_dis, delta_turn)
+                self.head.head_move(delta_pan, delta_tilt, duration=0.05)
                 print "finished head move"
         # else:
         #     if self.face_already_seen:
@@ -141,7 +138,7 @@ class FDDemo(object):
         distance = self.findDistance(face.size)
         x = distance
         y = - (face.center.x - 0.5) * distance
-        z = 0.0
+        z = 0
         return PointStamped(
             header = face.header,
             point = Point(x, y, z)
