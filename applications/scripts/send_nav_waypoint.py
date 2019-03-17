@@ -61,12 +61,10 @@ class NavWaypoint(object):
         return True
 
     def send_origin_waypoint(self, feedback_cb=None, transition_cb=None):
-        return self.send_waypoint(0, 0, 1, 0, feedback_cb=feedback_cb, transition_cb=transition_cb)
-
+        return self.send_waypoint(0.5, 0.25, 0, 1, feedback_cb=feedback_cb, transition_cb=transition_cb)
 
     def update_pose(self, pose):
         self.current_pose = pose
-
 
     def wait_for_server(self, timeout=rospy.Duration(0.0)):
         return self.actionClient.wait_for_server(timeout)

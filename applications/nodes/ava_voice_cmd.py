@@ -15,11 +15,16 @@ import robot_api
 import os
 import random
 import threading
+import sys
+from os import path
 
-from face_behavior import FaceBehavior
+# fix path so we can import classes from the scripts folder
+sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
+from scripts.face_behavior import FaceBehavior
+from scripts.send_nav_waypoint import NavWaypoint
+
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
-from send_nav_waypoint import NavWaypoint
 
 # STATES
 REST = 0
@@ -27,6 +32,12 @@ STRESS_ASK = 1
 STRESS_HELP = 2
 BACKPACK = 3
 PROMPT = 4
+
+# start position
+START_X = 1.75
+START_Y = -0.68325
+START_Z_ORIENT = 0.64884
+START_W_ORIENT = 0.76093
 
 PROMPTS = ["/HowAreYouDoing.wav", "/HowAreYouFeeling.wav"]
 ENCOURAGEMENTS = ["/Breathe1.wav", "/Breathe2.wav", "/HereWithYou.wav", "/Snack.wav"]
@@ -39,16 +50,24 @@ class AvaVoiceCommand:
         rospy.on_shutdown(self.cleanup)
         self.msg = Twist()
         self.social_cues = robot_api.Social_Cues()
+        self.social_cues.express_neutral()
         self.lights = robot_api.Lights()
         self.sound_src = kuri_api.SoundSource('AvaVoiceCommand')
         self.sound_src_music = kuri_api.SoundSource('AvaVoiceCommand-music')
         self._base = robot_api.Base()
         self._head = robot_api.Head()
+        # set head to neutral
+        self._head.pan_and_tilt(0, 0)
         self._face_behavior = FaceBehavior()
         self._nav_waypoint = NavWaypoint()
         self._sleeping = False
+        self._said_good_morning = False
 
         
+        # publish to cmd_vel (publishes empty twist message to stop), subscribe to speech output
+        self._pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
+        rospy.Subscriber('recognizer/asr_output', String, self.speechCb)
+
         self._kill_prompt_thread = False
         threading.Thread(target=self._prompt_thread).start()
         rospy.on_shutdown(self.cleanup)
@@ -56,9 +75,6 @@ class AvaVoiceCommand:
         self._log_set_state(REST)
         self._sound_dir = os.path.expanduser('~') + "/catkin_ws/src/cse481wi19/ava_custom_audio"
 
-        # publish to cmd_vel (publishes empty twist message to stop), subscribe to speech output
-        self.pub_ = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-        rospy.Subscriber('recognizer/asr_output', String, self.speechCb)
         rospy.spin()
 
     def promptUser(self):
@@ -81,15 +97,22 @@ class AvaVoiceCommand:
                 self._sleeping = False
                 self._exe_offer_help()
 
-            elif "GOOD MORNING" in msg.data:
+            elif "GOOD MORNING" in msg.data and not self._said_good_morning:
                 self._sleeping = False
                 self.social_cues.express_happy()
 
-                # say Good morning + a nice message
+                # say Good morning + a nice messagesend_origin_waypoint
                 self.wait_play_sound(self._sound_dir + "/GoodMorning.wav")
                 # randomly choose one
                 self.wait_play_sound(self._sound_dir + \
                         MORNING_MSGS[random.randrange(len(MORNING_MSGS))])
+
+                # go to start position
+                self._face_behavior.set_look_at(False)
+                self._nav_waypoint.send_waypoint(START_X, START_Y, START_Z_ORIENT, START_W_ORIENT)
+                self._face_behavior.set_look_at(True)
+                self._said_good_morning = True
+
                 
             elif "GOOD NIGHT" in msg.data:
                 self._sleeping = True
@@ -135,11 +158,12 @@ class AvaVoiceCommand:
                 self._log_set_state(REST)
 
         elif self._state is BACKPACK:
-            if "THANK" in msg.data \
-                    or "DONE" in msg.data:
+            if "THANK YOU" in msg.data:# or "DONE" in msg.data:
                 self.social_cues.express_happy()
-                self._base.go_forward(0.5)
-                self._base.turn(3.14)
+                self._face_behavior.set_look_at(False)
+                # self._nav_waypoint.send_origin_waypoint()
+                self._nav_waypoint.send_waypoint(START_X, START_Y, START_Z_ORIENT, START_W_ORIENT)
+                self._face_behavior.set_look_at(True)
                 self._log_set_state(REST)
         
         elif self._state is PROMPT:
@@ -182,9 +206,10 @@ class AvaVoiceCommand:
     def _exe_backpack(self):
         self.wait_play_sound(self._sound_dir + "/OnMyWay.wav")
         self.social_cues.nod_head()
+        self._face_behavior.set_look_at(False)
         # move to user and turn around
-        self._face_behavior.moveCloser()
-        self._base.turn(3.14)
+        self._face_behavior.moveBackpack()
+        self._face_behavior.set_look_at(True)
         self._log_set_state(BACKPACK)
         self._abort_after(60)
 
@@ -224,8 +249,8 @@ class AvaVoiceCommand:
         rospy.sleep(5)
         while not self._kill_prompt_thread:
             # if {am following user} or {see a face} and state is rest, then prompt:
-            if self._state is REST and not self._sleeping and self._face_behavior.num_faces is not 0:
-                self.promptUser()
+            # if self._state is REST and not self._sleeping and self._face_behavior.num_faces is not 0:
+                # self.promptUser()
             rospy.sleep(d)
         rospy.loginfo("PROMPT THREAD KILLED")
 
@@ -245,7 +270,7 @@ class AvaVoiceCommand:
 
     def cleanup(self):
         # stop the robot!
-        self.pub_.publish(self.msg)
+        # self._pub.publish(self.msg)
         self._kill_prompt_thread = True
         self.lights.all_leds(self.lights.OFF)
 

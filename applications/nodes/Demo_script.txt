@@ -1,0 +1,9 @@
+Demo Script
+
+Start with person in chair, Ava is near dock.
+Person says "GOOD MORNING", Ava says good morning and goes to start position.
+Person says "Ava, I'M FEELING STRESSED," Ava responds and plays music.
+Ava asks if Person is feeling better, respond with "YES PLEASE" or "YES THANKS".
+Person asks "Ava, CAN I SEE YOUR BACKPACK", Ava moves towards them and shows backpack.
+Person removes dog from backpack, tells Ava "THANK YOU" or "I'M DONE", Ava goes back to start position.
+Tell Ava "GOOD NIGHT", Ava says good night and goes back to dock.
