@@ -26,7 +26,7 @@ class Social_Cues(object):
         cur_pan = cur_head_pos[0]
         cur_tilt = cur_head_pos[1]
         effort = [effort, effort]
-        for i in range(1, 6):
+        for i in range(1, 4):
             point = JointTrajectoryPoint()
             if i % 2:
                 # move head down
@@ -59,7 +59,7 @@ class Social_Cues(object):
         cur_pan = cur_head_pos[0]
         cur_tilt = cur_head_pos[1]
         effort = [effort, effort]
-        for i in range(1, 6):
+        for i in range(1, 4):
             point = JointTrajectoryPoint()
             if i % 2:
                 # move head left

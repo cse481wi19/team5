@@ -1,4 +1,4 @@
-Language model created by QuickLM on Sat Mar  9 19:50:33 EST 2019
+Language model created by QuickLM on Sun Mar 17 17:48:56 EDT 2019
 Copyright (c) 1996-2010 Carnegie Mellon University and Alexander I. Rudnicky
 
 The model is in standard ARPA format, designed by Doug Paul while he was at MITRE.
@@ -7,52 +7,55 @@ The code that was used to produce this language model is available in Open Sourc
 Please visit http://www.speech.cs.cmu.edu/tools/ for more information
 
 The (fixed) discount mass is 0.5. The backoffs are computed using the ratio method.
-This model based on a corpus of 20 sentences and 25 words
+This model based on a corpus of 21 sentences and 26 words
 
 \data\
-ngram 1=25
-ngram 2=43
-ngram 3=38
+ngram 1=26
+ngram 2=45
+ngram 3=39
 
 \1-grams:
--0.8976 </s> -0.3010
--0.8976 <s> -0.2327
--2.1987 BACKPACK -0.2423
--2.1987 DONE -0.2423
--2.1987 FAVORITE -0.2955
--1.8976 FEELING -0.2899
--1.8976 GOOD -0.2955
--1.7215 I'M -0.2871
--2.1987 MORNING -0.2423
--2.1987 MY -0.2955
--2.1987 NIGHT -0.2423
--1.7215 NO -0.2295
--2.1987 NOT -0.2983
--2.1987 OKAY -0.2423
--2.1987 PLAY -0.2983
--2.1987 PLEASE -0.2423
--2.1987 REALLY -0.2423
--1.8976 SAD -0.2423
--1.8976 SONG -0.2423
--1.8976 STRESSED -0.2423
--1.8976 THANK -0.2955
--1.7215 THANKS -0.2423
--1.5966 YES -0.2229
--1.8976 YOU -0.2423
--2.1987 YOUR -0.2983
+-0.8926 </s> -0.3010
+-0.8926 <s> -0.2323
+-2.2148 AVA -0.2415
+-2.2148 BACKPACK -0.2415
+-2.2148 DONE -0.2415
+-2.2148 FAVORITE -0.2957
+-1.9138 FEELING -0.2903
+-1.9138 GOOD -0.2957
+-1.7377 I'M -0.2876
+-2.2148 MORNING -0.2415
+-2.2148 MY -0.2957
+-2.2148 NIGHT -0.2415
+-1.7377 NO -0.2292
+-2.2148 NOT -0.2984
+-2.2148 OKAY -0.2415
+-2.2148 PLAY -0.2984
+-2.2148 PLEASE -0.2415
+-2.2148 REALLY -0.2415
+-1.9138 SAD -0.2415
+-1.9138 SONG -0.2415
+-1.9138 STRESSED -0.2415
+-1.9138 THANK -0.2957
+-1.7377 THANKS -0.2415
+-1.6128 YES -0.2229
+-1.9138 YOU -0.2415
+-2.2148 YOUR -0.2984
 
 \2-grams:
--1.6021 <s> DONE 0.0000
--1.6021 <s> FAVORITE 0.0000
--1.3010 <s> FEELING 0.0000
--1.3010 <s> GOOD 0.0000
--1.1249 <s> I'M 0.0000
--1.1249 <s> NO 0.0000
--1.6021 <s> PLAY 0.0000
--1.6021 <s> THANK 0.0000
--1.6021 <s> THANKS 0.0000
--1.0000 <s> YES 0.0000
--1.6021 <s> YOUR 0.0000
+-1.6232 <s> AVA 0.0000
+-1.6232 <s> DONE 0.0000
+-1.6232 <s> FAVORITE 0.0000
+-1.3222 <s> FEELING 0.0000
+-1.3222 <s> GOOD 0.0000
+-1.1461 <s> I'M 0.0000
+-1.1461 <s> NO 0.0000
+-1.6232 <s> PLAY 0.0000
+-1.6232 <s> THANK 0.0000
+-1.6232 <s> THANKS 0.0000
+-1.0212 <s> YES 0.0000
+-1.6232 <s> YOUR 0.0000
+-0.3010 AVA </s> -0.3010
 -0.3010 BACKPACK </s> -0.3010
 -0.3010 DONE </s> -0.3010
 -0.3010 FAVORITE SONG 0.0000
@@ -87,6 +90,7 @@ ngram 3=38
 -0.3010 YOUR BACKPACK 0.0000
 
 \3-grams:
+-0.3010 <s> AVA </s>
 -0.3010 <s> DONE </s>
 -0.3010 <s> FAVORITE SONG
 -0.6021 <s> FEELING SAD
